@@ -1,0 +1,44 @@
+name: News Digest
+
+on:
+  schedule:
+    # Run 4 times a day (UTC times)
+    # 7:00 AM Portugal (6:00 UTC in winter, 5:00 UTC in summer)
+    - cron: '0 6 * * *'
+    # 12:00 PM Portugal
+    - cron: '0 11 * * *'
+    # 6:00 PM Portugal
+    - cron: '0 17 * * *'
+    # 10:00 PM Portugal
+    - cron: '0 21 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Send digest
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+        run: npm start
