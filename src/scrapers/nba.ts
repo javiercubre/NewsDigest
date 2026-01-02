@@ -34,6 +34,17 @@ interface ESPNCompetitor {
   }>;
 }
 
+interface ESPNLeader {
+  name: string;
+  displayName: string;
+  leaders: Array<{
+    displayValue: string;
+    athlete: {
+      displayName: string;
+    };
+  }>;
+}
+
 interface ESPNEvent {
   status: {
     type: {
@@ -43,6 +54,7 @@ interface ESPNEvent {
   };
   competitions: Array<{
     competitors: ESPNCompetitor[];
+    leaders?: ESPNLeader[];
   }>;
 }
 
@@ -92,35 +104,19 @@ export async function fetchNBAScores(): Promise<NBAScores> {
         const homeScore = parseInt(home.score) || 0;
         const awayScore = parseInt(away.score) || 0;
 
-        // Get top performer (points leader)
+        // Get top performer (points leader) from competition-level leaders
         let topPlayer = 'N/A';
         let topPlayerStats = '';
 
-        // Check home team leaders first
-        const homeLeaders = home.leaders?.find(l => l.displayName === 'points');
-        const awayLeaders = away.leaders?.find(l => l.displayName === 'points');
+        // Leaders are at the competition level, not competitor level
+        const pointsLeaders = competition.leaders?.find(
+          l => l.name === 'points' || l.displayName === 'Points'
+        );
 
-        // Compare and get the highest scorer
-        const homeTopScorer = homeLeaders?.leaders?.[0];
-        const awayTopScorer = awayLeaders?.leaders?.[0];
-
-        if (homeTopScorer && awayTopScorer) {
-          const homePoints = parseInt(homeTopScorer.displayValue) || 0;
-          const awayPoints = parseInt(awayTopScorer.displayValue) || 0;
-
-          if (homePoints >= awayPoints) {
-            topPlayer = homeTopScorer.athlete?.displayName || 'N/A';
-            topPlayerStats = `${homeTopScorer.displayValue} PTS`;
-          } else {
-            topPlayer = awayTopScorer.athlete?.displayName || 'N/A';
-            topPlayerStats = `${awayTopScorer.displayValue} PTS`;
-          }
-        } else if (homeTopScorer) {
-          topPlayer = homeTopScorer.athlete?.displayName || 'N/A';
-          topPlayerStats = `${homeTopScorer.displayValue} PTS`;
-        } else if (awayTopScorer) {
-          topPlayer = awayTopScorer.athlete?.displayName || 'N/A';
-          topPlayerStats = `${awayTopScorer.displayValue} PTS`;
+        const topScorer = pointsLeaders?.leaders?.[0];
+        if (topScorer) {
+          topPlayer = topScorer.athlete?.displayName || 'N/A';
+          topPlayerStats = `${topScorer.displayValue} PTS`;
         }
 
         games.push({
