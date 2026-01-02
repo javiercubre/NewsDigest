@@ -16,25 +16,25 @@ export function sanitizeText(text: string): string {
     '&#39;': "'",
     '&apos;': "'",
     '&nbsp;': ' ',
-    '&ndash;': '–',
-    '&mdash;': '—',
-    '&lsquo;': ''',
-    '&rsquo;': ''',
+    '&ndash;': '-',
+    '&mdash;': '-',
+    '&lsquo;': "'",
+    '&rsquo;': "'",
     '&ldquo;': '"',
     '&rdquo;': '"',
-    '&hellip;': '…',
-    '&euro;': '€',
-    '&pound;': '£',
-    '&copy;': '©',
-    '&reg;': '®',
-    '&trade;': '™',
-    '&deg;': '°',
-    '&plusmn;': '±',
-    '&frac12;': '½',
-    '&frac14;': '¼',
-    '&frac34;': '¾',
-    '&times;': '×',
-    '&divide;': '÷',
+    '&hellip;': '...',
+    '&euro;': 'EUR',
+    '&pound;': 'GBP',
+    '&copy;': '(c)',
+    '&reg;': '(R)',
+    '&trade;': '(TM)',
+    '&deg;': ' deg',
+    '&plusmn;': '+/-',
+    '&frac12;': '1/2',
+    '&frac14;': '1/4',
+    '&frac34;': '3/4',
+    '&times;': 'x',
+    '&divide;': '/',
   };
 
   // Replace named HTML entities
@@ -50,33 +50,6 @@ export function sanitizeText(text: string): string {
     String.fromCharCode(parseInt(code, 16))
   );
 
-  // Fix common encoding issues
-  const encodingFixes: Record<string, string> = {
-    'Ã¡': 'á', 'Ã ': 'à', 'Ã¢': 'â', 'Ã£': 'ã', 'Ã¤': 'ä', 'Ã¥': 'å',
-    'Ã©': 'é', 'Ã¨': 'è', 'Ãª': 'ê', 'Ã«': 'ë',
-    'Ã­': 'í', 'Ã¬': 'ì', 'Ã®': 'î', 'Ã¯': 'ï',
-    'Ã³': 'ó', 'Ã²': 'ò', 'Ã´': 'ô', 'Ãµ': 'õ', 'Ã¶': 'ö',
-    'Ãº': 'ú', 'Ã¹': 'ù', 'Ã»': 'û', 'Ã¼': 'ü',
-    'Ã§': 'ç', 'Ã±': 'ñ',
-    'Ã': 'Á', 'Ã€': 'À', 'Ã‚': 'Â', 'Ãƒ': 'Ã', 'Ã„': 'Ä', 'Ã…': 'Å',
-    'Ã‰': 'É', 'Ãˆ': 'È', 'ÃŠ': 'Ê', 'Ã‹': 'Ë',
-    'Ã': 'Í', 'ÃŒ': 'Ì', 'ÃŽ': 'Î', 'Ã': 'Ï',
-    'Ã"': 'Ó', 'Ã'': 'Ò', 'Ã"': 'Ô', 'Ã•': 'Õ', 'Ã–': 'Ö',
-    'Ãš': 'Ú', 'Ã™': 'Ù', 'Ã›': 'Û', 'Ãœ': 'Ü',
-    'Ã‡': 'Ç', 'Ã'': 'Ñ',
-    'â€"': '–', 'â€"': '—',
-    'â€œ': '"', 'â€': '"',
-    'â€˜': ''', 'â€™': ''',
-    'â€¦': '…',
-    'â€¢': '•',
-    'Â ': ' ', 'Â': '',
-    'â‚¬': '€',
-  };
-
-  for (const [broken, fixed] of Object.entries(encodingFixes)) {
-    result = result.split(broken).join(fixed);
-  }
-
   // Normalize special characters that might cause issues
   result = result
     .replace(/[\u0080-\u009F]/g, '') // Remove control characters
@@ -84,32 +57,36 @@ export function sanitizeText(text: string): string {
     .replace(/\s+/g, ' ')            // Collapse multiple spaces
     .replace(/^\s+|\s+$/g, '');      // Trim
 
-  // Normalize quotes and dashes
+  // Normalize quotes and dashes to ASCII equivalents
   result = result
-    .replace(/['']/g, "'")
-    .replace(/[""]/g, '"')
-    .replace(/[–—]/g, '-');
+    .replace(/[\u2018\u2019\u201A\u201B]/g, "'")  // Smart single quotes
+    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')  // Smart double quotes
+    .replace(/[\u2013\u2014\u2015]/g, '-')        // En/em dashes
+    .replace(/\u2026/g, '...')                    // Ellipsis
+    .replace(/\u00B7/g, '-')                      // Middle dot
+    .replace(/\u2022/g, '-')                      // Bullet
+    .replace(/~/g, '-');                          // Tilde to dash
 
   return result;
 }
 
 /**
- * Escape HTML for safe display
+ * Escape HTML for safe display in email
  */
 export function escapeHtml(text: string): string {
-  const htmlEscapes: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-  };
+  if (!text) return '';
 
-  return text.replace(/[&<>"']/g, char => htmlEscapes[char] || char);
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /**
  * Calculate article priority based on various signals
+ * Returns a score from 1-10 (higher = more important)
  */
 export function calculatePriority(
   position: number,

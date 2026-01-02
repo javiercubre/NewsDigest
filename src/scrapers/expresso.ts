@@ -22,7 +22,7 @@ export async function scrapeExpresso(): Promise<SourceDigest> {
       responseEncoding: 'utf8',
     });
 
-    const $ = cheerio.load(response.data, { decodeEntities: true });
+    const $ = cheerio.load(response.data);
 
     // Track position for priority calculation
     let position = 0;

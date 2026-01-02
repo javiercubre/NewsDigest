@@ -22,7 +22,7 @@ export async function scrapePublico(): Promise<SourceDigest> {
       responseEncoding: 'utf8',
     });
 
-    const $ = cheerio.load(response.data, { decodeEntities: true });
+    const $ = cheerio.load(response.data);
 
     let position = 0;
 
