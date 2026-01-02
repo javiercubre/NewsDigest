@@ -3,10 +3,10 @@ import * as cheerio from 'cheerio';
 import { Article, SourceDigest } from '../types';
 import { sanitizeText, calculatePriority } from '../utils';
 
-const SOURCE_URL = 'https://www.nytimes.com';
-const SOURCE_NAME = 'The New York Times';
+const SOURCE_URL = 'https://www.theguardian.com/international';
+const SOURCE_NAME = 'The Guardian';
 
-export async function scrapeNYT(): Promise<SourceDigest> {
+export async function scrapeGuardian(): Promise<SourceDigest> {
   const articles: Article[] = [];
 
   try {
@@ -14,7 +14,7 @@ export async function scrapeNYT(): Promise<SourceDigest> {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Language': 'en-GB,en;q=0.9',
         'Accept-Charset': 'utf-8',
       },
       timeout: 15000,
@@ -36,11 +36,10 @@ export async function scrapeNYT(): Promise<SourceDigest> {
       let url = $link.attr('href') || '';
 
       if (title && url && title.length > 10) {
-        if (url.startsWith('/')) url = SOURCE_URL + url;
+        if (url.startsWith('/')) url = 'https://www.theguardian.com' + url;
         if (!url.startsWith('http')) return;
-        if (url.includes('/interactive/') || url.includes('/video/')) return;
         if (!articles.find(a => a.title === title)) {
-          const hasImage = $link.closest('article, [class*="story"]').find('img').length > 0;
+          const hasImage = $link.closest('article, [class*="card"]').find('img').length > 0;
           articles.push({
             title,
             url,
@@ -53,21 +52,20 @@ export async function scrapeNYT(): Promise<SourceDigest> {
       }
     });
 
-    // Story containers
-    $('[class*="story"], article, [data-testid="block-link"]').each((_, element) => {
+    // Guardian uses various card/container patterns
+    $('[data-link-name*="article"], [class*="fc-item"], [class*="card"], article').each((_, element) => {
       const $el = $(element);
       const $link = $el.find('a').first();
-      const $title = $el.find('h2, h3, h4, [class*="headline"], p[class*="heading"]').first();
+      const $title = $el.find('h2, h3, h4, [class*="headline"], span[class*="title"]').first();
 
       let title = sanitizeText($title.text() || $link.text());
       let url = $link.attr('href') || '';
 
       if (title && url && title.length > 10) {
-        if (url.startsWith('/')) url = SOURCE_URL + url;
+        if (url.startsWith('/')) url = 'https://www.theguardian.com' + url;
         if (!url.startsWith('http')) return;
-        if (url.includes('/interactive/') || url.includes('/video/')) return;
         if (!articles.find(a => a.title === title)) {
-          const summary = sanitizeText($el.find('[class*="summary"], [class*="description"]').text());
+          const summary = sanitizeText($el.find('[class*="standfirst"], [class*="trail"], [class*="description"]').text());
           const hasImage = $el.find('img').length > 0;
           const isH2 = $title.is('h2');
 
@@ -75,7 +73,7 @@ export async function scrapeNYT(): Promise<SourceDigest> {
             title,
             url,
             summary: summary || undefined,
-            category: sanitizeText($el.find('[class*="section"], [data-testid="section"]').text()) || undefined,
+            category: sanitizeText($el.find('[class*="kicker"], [class*="section"]').text()) || undefined,
             priority: calculatePriority(position, isH2, hasImage, title.length, !!summary),
             isHeadline: isH2,
             source: SOURCE_NAME,
@@ -85,16 +83,17 @@ export async function scrapeNYT(): Promise<SourceDigest> {
       }
     });
 
-    // Fallback: date-based article links
+    // Fallback: look for article links
     $('a[href*="/2024/"], a[href*="/2025/"], a[href*="/2026/"]').each((_, element) => {
       const $el = $(element);
-      const $heading = $el.find('h2, h3, h4').first();
+      const $heading = $el.find('h2, h3, h4, span').first();
       const title = sanitizeText($heading.text() || $el.text());
       let url = $el.attr('href') || '';
 
       if (title && url && title.length > 15 && !articles.find(a => a.title === title)) {
-        if (url.startsWith('/')) url = SOURCE_URL + url;
-        if (url.includes('/interactive/') || url.includes('/video/')) return;
+        if (url.startsWith('/')) url = 'https://www.theguardian.com' + url;
+        // Filter out non-article URLs
+        if (url.includes('/live/') || url.includes('/video/') || url.includes('/gallery/')) return;
         articles.push({
           title,
           url,

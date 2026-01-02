@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { Article, SourceDigest } from './types';
 import { escapeHtml } from './utils';
+import { NBAScores } from './scrapers/nba';
 
 interface EmailConfig {
   host: string;
@@ -41,7 +42,7 @@ function getTopHeadlines(digests: SourceDigest[], count: number = 5): Article[] 
     .slice(0, count);
 }
 
-function formatDigestHTML(digests: SourceDigest[]): string {
+function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): string {
   const now = new Date();
   const formattedDate = now.toLocaleDateString('pt-PT', {
     weekday: 'long',
@@ -95,23 +96,23 @@ function formatDigestHTML(digests: SourceDigest[]): string {
       font-size: 14px;
     }
     .top-headlines {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      background-color: #fff8e1;
+      border: 2px solid #ffc107;
       border-radius: 12px;
       padding: 25px;
       margin-bottom: 35px;
-      color: white;
     }
     .top-headlines h2 {
       margin: 0 0 20px 0;
       font-size: 22px;
-      color: #ffd700;
+      color: #e65100;
       display: flex;
       align-items: center;
       gap: 10px;
     }
     .top-headline-item {
       padding: 15px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid #ffe082;
     }
     .top-headline-item:last-child {
       border-bottom: none;
@@ -123,11 +124,11 @@ function formatDigestHTML(digests: SourceDigest[]): string {
       font-weight: 600;
     }
     .top-headline-item h3 a {
-      color: #ffffff;
+      color: #1a1a1a;
       text-decoration: none;
     }
     .top-headline-item h3 a:hover {
-      color: #ffd700;
+      color: #e65100;
       text-decoration: underline;
     }
     .top-headline-meta {
@@ -137,23 +138,55 @@ function formatDigestHTML(digests: SourceDigest[]): string {
       font-size: 13px;
     }
     .top-headline-source {
-      background-color: rgba(255,215,0,0.2);
-      color: #ffd700;
+      background-color: #e65100;
+      color: #ffffff;
       padding: 3px 10px;
       border-radius: 12px;
       font-weight: 500;
     }
     .top-headline-summary {
-      color: rgba(255,255,255,0.8);
+      color: #5d4037;
       font-size: 14px;
       margin-top: 8px;
     }
     .priority-badge {
-      background-color: rgba(255,255,255,0.15);
-      color: rgba(255,255,255,0.9);
+      background-color: #ffcc80;
+      color: #5d4037;
       padding: 2px 8px;
       border-radius: 10px;
       font-size: 11px;
+    }
+    .nba-section {
+      background-color: #e3f2fd;
+      border: 2px solid #1976d2;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 35px;
+    }
+    .nba-section h2 {
+      margin: 0 0 20px 0;
+      font-size: 22px;
+      color: #1565c0;
+    }
+    .nba-game {
+      padding: 12px 0;
+      border-bottom: 1px solid #90caf9;
+    }
+    .nba-game:last-child {
+      border-bottom: none;
+    }
+    .nba-score {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 5px;
+    }
+    .nba-winner {
+      color: #1565c0;
+    }
+    .nba-top-player {
+      font-size: 13px;
+      color: #5d4037;
     }
     .source-section {
       margin-bottom: 35px;
@@ -265,6 +298,28 @@ function formatDigestHTML(digests: SourceDigest[]): string {
     html += `    </div>\n`;
   }
 
+  // NBA Scores Section (morning digest only)
+  if (nbaScores && nbaScores.games.length > 0) {
+    html += `
+    <div class="nba-section">
+      <h2>🏀 NBA Scores - ${escapeHtml(nbaScores.date)}</h2>
+`;
+    for (const game of nbaScores.games) {
+      const winnerClass = game.winner === 'home' ? 'home' : 'away';
+      html += `
+      <div class="nba-game">
+        <div class="nba-score">
+          <span class="${game.winner === 'away' ? 'nba-winner' : ''}">${escapeHtml(game.awayTeam)} ${game.awayScore}</span>
+          <span> @ </span>
+          <span class="${game.winner === 'home' ? 'nba-winner' : ''}">${escapeHtml(game.homeTeam)} ${game.homeScore}</span>
+        </div>
+        <div class="nba-top-player">Top: ${escapeHtml(game.topPlayer)}${game.topPlayerStats ? ` - ${escapeHtml(game.topPlayerStats)}` : ''}</div>
+      </div>
+`;
+    }
+    html += `    </div>\n`;
+  }
+
   // Individual source sections
   for (const digest of digests) {
     html += `
@@ -303,7 +358,7 @@ function formatDigestHTML(digests: SourceDigest[]): string {
   html += `
     <div class="footer">
       <p>Este digest é gerado automaticamente 4 vezes por dia.</p>
-      <p>Fontes: Expresso, Público, ZeroZero, The New York Times</p>
+      <p>Fontes: Expresso, Público, ZeroZero, The Guardian</p>
     </div>
   </div>
 </body>
@@ -313,7 +368,7 @@ function formatDigestHTML(digests: SourceDigest[]): string {
   return html;
 }
 
-function formatDigestText(digests: SourceDigest[]): string {
+function formatDigestText(digests: SourceDigest[], nbaScores?: NBAScores): string {
   const now = new Date();
   const formattedDate = now.toLocaleDateString('pt-PT', {
     weekday: 'long',
@@ -340,6 +395,19 @@ function formatDigestText(digests: SourceDigest[]): string {
       text += `\n★ ${article.title}\n`;
       text += `  [${article.source}] Priority: ${article.priority}/10\n`;
       text += `  ${article.url}\n`;
+    }
+    text += `\n${'='.repeat(50)}\n`;
+  }
+
+  // NBA Scores (morning digest only)
+  if (nbaScores && nbaScores.games.length > 0) {
+    text += `\n🏀 NBA SCORES - ${nbaScores.date}\n`;
+    text += `${'─'.repeat(40)}\n`;
+    for (const game of nbaScores.games) {
+      const winner = game.winner === 'home' ? game.homeTeam : game.awayTeam;
+      text += `\n${game.awayTeam} ${game.awayScore} @ ${game.homeTeam} ${game.homeScore}`;
+      text += ` (W: ${winner})\n`;
+      text += `  Top: ${game.topPlayer}${game.topPlayerStats ? ` - ${game.topPlayerStats}` : ''}\n`;
     }
     text += `\n${'='.repeat(50)}\n`;
   }
@@ -372,7 +440,8 @@ function formatDigestText(digests: SourceDigest[]): string {
 
 export async function sendDigestEmail(
   recipientEmail: string,
-  digests: SourceDigest[]
+  digests: SourceDigest[],
+  nbaScores?: NBAScores
 ): Promise<void> {
   const config = getEmailConfig();
 
@@ -405,8 +474,8 @@ export async function sendDigestEmail(
     from: `"News Digest" <${config.user}>`,
     to: recipientEmail,
     subject,
-    text: formatDigestText(digests),
-    html: formatDigestHTML(digests),
+    text: formatDigestText(digests, nbaScores),
+    html: formatDigestHTML(digests, nbaScores),
   };
 
   await transporter.sendMail(mailOptions);

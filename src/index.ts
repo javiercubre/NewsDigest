@@ -1,7 +1,8 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { scrapeExpresso, scrapePublico, scrapeZeroZero, scrapeNYT } from './scrapers';
+import { scrapeExpresso, scrapePublico, scrapeZeroZero, scrapeGuardian } from './scrapers';
+import { fetchNBAScores, isMorningDigest, NBAScores } from './scrapers/nba';
 import { sendDigestEmail } from './email';
 import { SourceDigest } from './types';
 
@@ -14,7 +15,7 @@ async function scrapeAllSources(): Promise<SourceDigest[]> {
     { name: 'Expresso', fn: scrapeExpresso },
     { name: 'Público', fn: scrapePublico },
     { name: 'ZeroZero', fn: scrapeZeroZero },
-    { name: 'NYT', fn: scrapeNYT },
+    { name: 'The Guardian', fn: scrapeGuardian },
   ];
 
   const results: SourceDigest[] = [];
@@ -55,6 +56,18 @@ async function main(): Promise<void> {
     // Scrape all sources
     const digests = await scrapeAllSources();
 
+    // Fetch NBA scores for morning digest only
+    let nbaScores: NBAScores | undefined;
+    if (isMorningDigest()) {
+      console.log('🏀 Fetching NBA scores (morning digest)...');
+      nbaScores = await fetchNBAScores();
+      if (nbaScores.error) {
+        console.log(`   ⚠️ NBA Error: ${nbaScores.error}`);
+      } else {
+        console.log(`   ✅ Found ${nbaScores.games.length} games`);
+      }
+    }
+
     // Count total articles
     const totalArticles = digests.reduce((sum, d) => sum + d.articles.length, 0);
     console.log(`\n📊 Total: ${totalArticles} articles from ${digests.length} sources\n`);
@@ -66,7 +79,7 @@ async function main(): Promise<void> {
 
     // Send email
     console.log(`📧 Sending digest to ${RECIPIENT_EMAIL}...`);
-    await sendDigestEmail(RECIPIENT_EMAIL, digests);
+    await sendDigestEmail(RECIPIENT_EMAIL, digests, nbaScores);
 
     console.log('\n✅ Digest completed successfully!');
   } catch (error) {
