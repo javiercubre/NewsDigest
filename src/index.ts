@@ -56,10 +56,11 @@ async function main(): Promise<void> {
     // Scrape all sources
     const digests = await scrapeAllSources();
 
-    // Fetch NBA scores for morning digest only
+    // Fetch NBA scores for morning digest (or if forced via env var for testing)
     let nbaScores: NBAScores | undefined;
-    if (isMorningDigest()) {
-      console.log('🏀 Fetching NBA scores (morning digest)...');
+    const forceNBA = process.env.FORCE_NBA === 'true';
+    if (isMorningDigest() || forceNBA) {
+      console.log(`🏀 Fetching NBA scores (${forceNBA ? 'forced' : 'morning digest'})...`);
       nbaScores = await fetchNBAScores();
       if (nbaScores.error) {
         console.log(`   ⚠️ NBA Error: ${nbaScores.error}`);

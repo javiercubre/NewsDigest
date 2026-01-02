@@ -12,6 +12,15 @@ on:
     # 10:00 PM Portugal
     - cron: '0 21 * * *'
   workflow_dispatch: # Allow manual trigger
+    inputs:
+      force_nba:
+        description: 'Force NBA scores (for testing)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   send-digest:
@@ -40,4 +49,5 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+          FORCE_NBA: ${{ github.event.inputs.force_nba || 'false' }}
         run: npm start

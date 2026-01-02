@@ -22,24 +22,31 @@ function getEmailConfig(): EmailConfig {
 }
 
 /**
- * Extract top headlines from all sources based on priority score
+ * Extract top headlines from all sources
+ * Ensures at least 2 headlines per source for balanced representation
  */
-function getTopHeadlines(digests: SourceDigest[], count: number = 5): Article[] {
-  const allArticles: Article[] = [];
+function getTopHeadlines(digests: SourceDigest[], minPerSource: number = 2): Article[] {
+  const topHeadlines: Article[] = [];
 
+  // Get top N articles from each source
   for (const digest of digests) {
-    for (const article of digest.articles) {
-      allArticles.push({
+    if (digest.articles.length === 0) continue;
+
+    // Sort articles by priority and take top minPerSource
+    const sortedArticles = [...digest.articles]
+      .sort((a, b) => b.priority - a.priority)
+      .slice(0, minPerSource);
+
+    for (const article of sortedArticles) {
+      topHeadlines.push({
         ...article,
         source: digest.source,
       });
     }
   }
 
-  // Sort by priority (descending) and take top N
-  return allArticles
-    .sort((a, b) => b.priority - a.priority)
-    .slice(0, count);
+  // Sort all collected headlines by priority
+  return topHeadlines.sort((a, b) => b.priority - a.priority);
 }
 
 function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): string {
@@ -55,7 +62,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
     minute: '2-digit',
   });
 
-  const topHeadlines = getTopHeadlines(digests, 5);
+  const topHeadlines = getTopHeadlines(digests, 2); // 2 per source
 
   let html = `
 <!DOCTYPE html>
@@ -381,7 +388,7 @@ function formatDigestText(digests: SourceDigest[], nbaScores?: NBAScores): strin
     minute: '2-digit',
   });
 
-  const topHeadlines = getTopHeadlines(digests, 5);
+  const topHeadlines = getTopHeadlines(digests, 2); // 2 per source
 
   let text = `📰 NEWS DIGEST\n`;
   text += `${formattedDate} às ${formattedTime}\n`;
@@ -466,7 +473,7 @@ export async function sendDigestEmail(
     month: '2-digit',
   });
 
-  const topHeadlines = getTopHeadlines(digests, 1);
+  const topHeadlines = getTopHeadlines(digests, 1); // Just need top 1 for subject
   const topStory = topHeadlines[0]?.title || 'Your news digest is ready';
   const subject = `📰 ${timeOfDay} (${dateStr}): ${topStory.slice(0, 60)}${topStory.length > 60 ? '...' : ''}`;
 
