@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
-import { SourceDigest } from './types';
+import { Article, SourceDigest } from './types';
+import { escapeHtml } from './utils';
 
 interface EmailConfig {
   host: string;
@@ -19,6 +20,27 @@ function getEmailConfig(): EmailConfig {
   };
 }
 
+/**
+ * Extract top headlines from all sources based on priority score
+ */
+function getTopHeadlines(digests: SourceDigest[], count: number = 5): Article[] {
+  const allArticles: Article[] = [];
+
+  for (const digest of digests) {
+    for (const article of digest.articles) {
+      allArticles.push({
+        ...article,
+        source: digest.source,
+      });
+    }
+  }
+
+  // Sort by priority (descending) and take top N
+  return allArticles
+    .sort((a, b) => b.priority - a.priority)
+    .slice(0, count);
+}
+
 function formatDigestHTML(digests: SourceDigest[]): string {
   const now = new Date();
   const formattedDate = now.toLocaleDateString('pt-PT', {
@@ -31,6 +53,8 @@ function formatDigestHTML(digests: SourceDigest[]): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+
+  const topHeadlines = getTopHeadlines(digests, 5);
 
   let html = `
 <!DOCTYPE html>
@@ -69,6 +93,67 @@ function formatDigestHTML(digests: SourceDigest[]): string {
     .header .date {
       color: #666;
       font-size: 14px;
+    }
+    .top-headlines {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 35px;
+      color: white;
+    }
+    .top-headlines h2 {
+      margin: 0 0 20px 0;
+      font-size: 22px;
+      color: #ffd700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .top-headline-item {
+      padding: 15px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .top-headline-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .top-headline-item h3 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .top-headline-item h3 a {
+      color: #ffffff;
+      text-decoration: none;
+    }
+    .top-headline-item h3 a:hover {
+      color: #ffd700;
+      text-decoration: underline;
+    }
+    .top-headline-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+    .top-headline-source {
+      background-color: rgba(255,215,0,0.2);
+      color: #ffd700;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+    .top-headline-summary {
+      color: rgba(255,255,255,0.8);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .priority-badge {
+      background-color: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.9);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
     }
     .source-section {
       margin-bottom: 35px;
@@ -157,17 +242,41 @@ function formatDigestHTML(digests: SourceDigest[]): string {
     </div>
 `;
 
+  // Top Headlines Section
+  if (topHeadlines.length > 0) {
+    html += `
+    <div class="top-headlines">
+      <h2>⭐ Top Headlines</h2>
+`;
+    for (const article of topHeadlines) {
+      html += `
+      <div class="top-headline-item">
+        <h3><a href="${escapeHtml(article.url)}" target="_blank">${escapeHtml(article.title)}</a></h3>
+        <div class="top-headline-meta">
+          <span class="top-headline-source">${escapeHtml(article.source || '')}</span>
+          <span class="priority-badge">Priority: ${article.priority}/10</span>
+        </div>
+`;
+      if (article.summary) {
+        html += `        <p class="top-headline-summary">${escapeHtml(article.summary)}</p>\n`;
+      }
+      html += `      </div>\n`;
+    }
+    html += `    </div>\n`;
+  }
+
+  // Individual source sections
   for (const digest of digests) {
     html += `
     <div class="source-section">
       <div class="source-header">
-        <h2>${digest.source}</h2>
-        <a href="${digest.sourceUrl}" target="_blank">Ver site →</a>
+        <h2>${escapeHtml(digest.source)}</h2>
+        <a href="${escapeHtml(digest.sourceUrl)}" target="_blank">Ver site →</a>
       </div>
 `;
 
     if (digest.error) {
-      html += `      <p class="error">⚠️ Erro ao carregar: ${digest.error}</p>\n`;
+      html += `      <p class="error">⚠️ Erro ao carregar: ${escapeHtml(digest.error)}</p>\n`;
     } else if (digest.articles.length === 0) {
       html += `      <p class="no-articles">Nenhum artigo encontrado</p>\n`;
     } else {
@@ -175,14 +284,14 @@ function formatDigestHTML(digests: SourceDigest[]): string {
         html += `
       <div class="article">
         <h3 class="article-title">
-          <a href="${article.url}" target="_blank">${article.title}</a>
+          <a href="${escapeHtml(article.url)}" target="_blank">${escapeHtml(article.title)}</a>
         </h3>
 `;
         if (article.summary) {
-          html += `        <p class="article-summary">${article.summary}</p>\n`;
+          html += `        <p class="article-summary">${escapeHtml(article.summary)}</p>\n`;
         }
         if (article.category) {
-          html += `        <span class="article-category">${article.category}</span>\n`;
+          html += `        <span class="article-category">${escapeHtml(article.category)}</span>\n`;
         }
         html += `      </div>\n`;
       }
@@ -217,9 +326,23 @@ function formatDigestText(digests: SourceDigest[]): string {
     minute: '2-digit',
   });
 
+  const topHeadlines = getTopHeadlines(digests, 5);
+
   let text = `📰 NEWS DIGEST\n`;
   text += `${formattedDate} às ${formattedTime}\n`;
   text += `${'='.repeat(50)}\n\n`;
+
+  // Top Headlines
+  if (topHeadlines.length > 0) {
+    text += `⭐ TOP HEADLINES\n`;
+    text += `${'─'.repeat(40)}\n`;
+    for (const article of topHeadlines) {
+      text += `\n★ ${article.title}\n`;
+      text += `  [${article.source}] Priority: ${article.priority}/10\n`;
+      text += `  ${article.url}\n`;
+    }
+    text += `\n${'='.repeat(50)}\n`;
+  }
 
   for (const digest of digests) {
     text += `\n▶ ${digest.source.toUpperCase()}\n`;
@@ -274,7 +397,9 @@ export async function sendDigestEmail(
     month: '2-digit',
   });
 
-  const subject = `📰 News Digest - ${timeOfDay} (${dateStr})`;
+  const topHeadlines = getTopHeadlines(digests, 1);
+  const topStory = topHeadlines[0]?.title || 'Your news digest is ready';
+  const subject = `📰 ${timeOfDay} (${dateStr}): ${topStory.slice(0, 60)}${topStory.length > 60 ? '...' : ''}`;
 
   const mailOptions = {
     from: `"News Digest" <${config.user}>`,
