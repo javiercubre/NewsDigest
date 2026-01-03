@@ -3,22 +3,22 @@ import { Article, SourceDigest } from './types';
 import { escapeHtml } from './utils';
 import { NBAScores } from './scrapers/nba';
 
-// Source logos - using reliable CDN/official URLs
+// Source logos - using Google's reliable favicon service
 const SOURCE_LOGOS: Record<string, { url: string; emoji: string }> = {
   'Expresso': {
-    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Expresso_%28Portugal%29_logo.svg/200px-Expresso_%28Portugal%29_logo.svg.png',
+    url: 'https://www.google.com/s2/favicons?domain=expresso.pt&sz=64',
     emoji: '📰',
   },
   'Público': {
-    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/P%C3%BAblico_logo.svg/200px-P%C3%BAblico_logo.svg.png',
+    url: 'https://www.google.com/s2/favicons?domain=publico.pt&sz=64',
     emoji: '📰',
   },
   'ZeroZero': {
-    url: 'https://www.zerozero.pt/img/logos/og-logo.png',
+    url: 'https://www.google.com/s2/favicons?domain=zerozero.pt&sz=64',
     emoji: '⚽',
   },
   'The Guardian': {
-    url: 'https://assets.guim.co.uk/images/guardian-logo-rss.c45beb1bafa34b347ac333af2e6fe23f.png',
+    url: 'https://www.google.com/s2/favicons?domain=theguardian.com&sz=64',
     emoji: '🗞️',
   },
 };
