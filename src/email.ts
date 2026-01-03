@@ -3,6 +3,26 @@ import { Article, SourceDigest } from './types';
 import { escapeHtml } from './utils';
 import { NBAScores } from './scrapers/nba';
 
+// Source logos - using reliable CDN/official URLs
+const SOURCE_LOGOS: Record<string, { url: string; emoji: string }> = {
+  'Expresso': {
+    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Expresso_%28Portugal%29_logo.svg/200px-Expresso_%28Portugal%29_logo.svg.png',
+    emoji: '📰',
+  },
+  'Público': {
+    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/P%C3%BAblico_logo.svg/200px-P%C3%BAblico_logo.svg.png',
+    emoji: '📰',
+  },
+  'ZeroZero': {
+    url: 'https://www.zerozero.pt/img/logos/og-logo.png',
+    emoji: '⚽',
+  },
+  'The Guardian': {
+    url: 'https://assets.guim.co.uk/images/guardian-logo-rss.c45beb1bafa34b347ac333af2e6fe23f.png',
+    emoji: '🗞️',
+  },
+};
+
 interface EmailConfig {
   host: string;
   port: number;
@@ -211,10 +231,18 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
       padding-bottom: 10px;
       border-bottom: 1px solid #e0e0e0;
     }
+    .source-logo {
+      width: 28px;
+      height: 28px;
+      margin-right: 10px;
+      object-fit: contain;
+      border-radius: 4px;
+    }
     .source-header h2 {
       margin: 0;
       font-size: 20px;
       color: #2c3e50;
+      flex-grow: 1;
     }
     .source-header a {
       color: #3498db;
@@ -295,11 +323,16 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
       <h2>⭐ Top Headlines</h2>
 `;
     for (const article of topHeadlines) {
+      const sourceLogo = SOURCE_LOGOS[article.source || ''];
+      const sourceLogoHtml = sourceLogo
+        ? `<img src="${escapeHtml(sourceLogo.url)}" alt="" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;border-radius:2px;" onerror="this.style.display='none'">`
+        : '';
+
       html += `
       <div class="top-headline-item">
         <h3><a href="${escapeHtml(article.url)}" target="_blank">${escapeHtml(article.title)}</a></h3>
         <div class="top-headline-meta">
-          <span class="top-headline-source">${escapeHtml(article.source || '')}</span>
+          <span class="top-headline-source">${sourceLogoHtml}${escapeHtml(article.source || '')}</span>
           <span class="priority-badge">Priority: ${article.priority}/10</span>
         </div>
 `;
@@ -338,9 +371,15 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
 
   // Individual source sections
   for (const digest of digests) {
+    const logo = SOURCE_LOGOS[digest.source];
+    const logoHtml = logo
+      ? `<img src="${escapeHtml(logo.url)}" alt="${escapeHtml(digest.source)}" class="source-logo" onerror="this.style.display='none'">`
+      : '';
+
     html += `
     <div class="source-section">
       <div class="source-header">
+        ${logoHtml}
         <h2>${escapeHtml(digest.source)}</h2>
         <a href="${escapeHtml(digest.sourceUrl)}" target="_blank">Ver site →</a>
       </div>
@@ -430,7 +469,8 @@ function formatDigestText(digests: SourceDigest[], nbaScores?: NBAScores): strin
   }
 
   for (const digest of digests) {
-    text += `\n▶ ${digest.source.toUpperCase()}\n`;
+    const sourceEmoji = SOURCE_LOGOS[digest.source]?.emoji || '📰';
+    text += `\n${sourceEmoji} ${digest.source.toUpperCase()}\n`;
     text += `${'-'.repeat(40)}\n`;
 
     if (digest.error) {

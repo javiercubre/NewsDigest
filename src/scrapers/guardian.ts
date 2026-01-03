@@ -3,6 +3,32 @@ import * as cheerio from 'cheerio';
 import { Article, SourceDigest } from '../types';
 import { sanitizeText, calculatePriority } from '../utils';
 
+/**
+ * Extract headline text from element, excluding kicker/label elements
+ * Guardian structure: <h3><div class="kicker">Category</div><span class="headline-text">Title</span></h3>
+ */
+function extractHeadlineText($: cheerio.CheerioAPI, $el: cheerio.Cheerio<any>): string {
+  // First try to find the specific headline-text span
+  const $headlineText = $el.find('.headline-text, [class*="headline-text"]');
+  if ($headlineText.length > 0) {
+    return sanitizeText($headlineText.first().text());
+  }
+
+  // Fallback: clone and remove kicker elements
+  const $clone = $el.clone();
+  // Remove kicker/label elements and image captions
+  $clone.find('[class*="kicker"], [class*="label"], [class*="section-label"], figcaption, [class*="caption"]').remove();
+  // Also remove any child divs that look like kickers (short text before headline)
+  $clone.find('div').each((_, div) => {
+    const text = $(div).text().trim();
+    if (text.length < 30 && !text.includes(' ')) {
+      $(div).remove();
+    }
+  });
+
+  return sanitizeText($clone.text());
+}
+
 const SOURCE_URL = 'https://www.theguardian.com/international';
 const SOURCE_NAME = 'The Guardian';
 
@@ -32,7 +58,7 @@ export async function scrapeGuardian(): Promise<SourceDigest> {
       const $link = $el.is('a') ? $el : $el.closest('a');
       const $heading = $el.is('a') ? $el.find('h1').first() : $el;
 
-      let title = sanitizeText($heading.text() || $link.text());
+      let title = extractHeadlineText($, $heading) || extractHeadlineText($, $link);
       let url = $link.attr('href') || '';
 
       if (title && url && title.length > 10) {
@@ -58,7 +84,7 @@ export async function scrapeGuardian(): Promise<SourceDigest> {
       const $link = $el.find('a').first();
       const $title = $el.find('h2, h3, h4, [class*="headline"], span[class*="title"]').first();
 
-      let title = sanitizeText($title.text() || $link.text());
+      let title = extractHeadlineText($, $title) || extractHeadlineText($, $link);
       let url = $link.attr('href') || '';
 
       if (title && url && title.length > 10) {
@@ -87,7 +113,7 @@ export async function scrapeGuardian(): Promise<SourceDigest> {
     $('a[href*="/2024/"], a[href*="/2025/"], a[href*="/2026/"]').each((_, element) => {
       const $el = $(element);
       const $heading = $el.find('h2, h3, h4, span').first();
-      const title = sanitizeText($heading.text() || $el.text());
+      const title = extractHeadlineText($, $heading) || extractHeadlineText($, $el);
       let url = $el.attr('href') || '';
 
       if (title && url && title.length > 15 && !articles.find(a => a.title === title)) {
