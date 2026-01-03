@@ -1,13 +1,22 @@
 import axios from 'axios';
 
+export interface PlayerStat {
+  name: string;
+  value: string;
+}
+
 export interface NBAGame {
   homeTeam: string;
   awayTeam: string;
   homeScore: number;
   awayScore: number;
   winner: 'home' | 'away';
-  topPlayer: string;
-  topPlayerStats: string;
+  homeTopScorer: PlayerStat;
+  awayTopScorer: PlayerStat;
+  homeTopRebounder: PlayerStat;
+  awayTopRebounder: PlayerStat;
+  homeTopAssists: PlayerStat;
+  awayTopAssists: PlayerStat;
 }
 
 export interface NBAScores {
@@ -24,9 +33,11 @@ interface ESPNCompetitor {
     displayName: string;
   };
   leaders?: Array<{
+    name: string;
     displayName: string;
     leaders: Array<{
       displayValue: string;
+      value?: number;
       athlete: {
         displayName: string;
       };
@@ -104,20 +115,60 @@ export async function fetchNBAScores(): Promise<NBAScores> {
         const homeScore = parseInt(home.score) || 0;
         const awayScore = parseInt(away.score) || 0;
 
-        // Get top performer (points leader) from competition-level leaders
-        let topPlayer = 'N/A';
-        let topPlayerStats = '';
+        // Helper to extract a leader stat from a competitor
+        const getLeaderStat = (
+          competitor: ESPNCompetitor,
+          category: string
+        ): { name: string; value: number; displayValue: string } | null => {
+          const leader = competitor.leaders?.find(
+            l => l.name === category || l.displayName?.toLowerCase() === category
+          );
+          const stat = leader?.leaders?.[0];
+          if (stat) {
+            return {
+              name: stat.athlete?.displayName || 'Unknown',
+              value: parseFloat(stat.value?.toString() || stat.displayValue) || 0,
+              displayValue: stat.displayValue,
+            };
+          }
+          return null;
+        };
 
-        // Leaders are at the competition level, not competitor level
-        const pointsLeaders = competition.leaders?.find(
-          l => l.name === 'points' || l.displayName === 'Points'
-        );
+        // Get top scorer for each team
+        const homeScorerData = getLeaderStat(home, 'points');
+        const awayScorerData = getLeaderStat(away, 'points');
 
-        const topScorer = pointsLeaders?.leaders?.[0];
-        if (topScorer) {
-          topPlayer = topScorer.athlete?.displayName || 'N/A';
-          topPlayerStats = `${topScorer.displayValue} PTS`;
-        }
+        const homeTopScorer: PlayerStat = homeScorerData
+          ? { name: homeScorerData.name, value: `${homeScorerData.displayValue} PTS` }
+          : { name: 'N/A', value: '' };
+
+        const awayTopScorer: PlayerStat = awayScorerData
+          ? { name: awayScorerData.name, value: `${awayScorerData.displayValue} PTS` }
+          : { name: 'N/A', value: '' };
+
+        // Get top rebounder for each team
+        const homeRebounderData = getLeaderStat(home, 'rebounds');
+        const awayRebounderData = getLeaderStat(away, 'rebounds');
+
+        const homeTopRebounder: PlayerStat = homeRebounderData
+          ? { name: homeRebounderData.name, value: `${homeRebounderData.displayValue} REB` }
+          : { name: 'N/A', value: '' };
+
+        const awayTopRebounder: PlayerStat = awayRebounderData
+          ? { name: awayRebounderData.name, value: `${awayRebounderData.displayValue} REB` }
+          : { name: 'N/A', value: '' };
+
+        // Get top assists for each team
+        const homeAssistsData = getLeaderStat(home, 'assists');
+        const awayAssistsData = getLeaderStat(away, 'assists');
+
+        const homeTopAssists: PlayerStat = homeAssistsData
+          ? { name: homeAssistsData.name, value: `${homeAssistsData.displayValue} AST` }
+          : { name: 'N/A', value: '' };
+
+        const awayTopAssists: PlayerStat = awayAssistsData
+          ? { name: awayAssistsData.name, value: `${awayAssistsData.displayValue} AST` }
+          : { name: 'N/A', value: '' };
 
         games.push({
           homeTeam: home.team?.abbreviation || home.team?.displayName || 'HOME',
@@ -125,8 +176,12 @@ export async function fetchNBAScores(): Promise<NBAScores> {
           homeScore,
           awayScore,
           winner: homeScore > awayScore ? 'home' : 'away',
-          topPlayer,
-          topPlayerStats,
+          homeTopScorer,
+          awayTopScorer,
+          homeTopRebounder,
+          awayTopRebounder,
+          homeTopAssists,
+          awayTopAssists,
         });
       }
     }

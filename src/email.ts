@@ -191,9 +191,15 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
     .nba-winner {
       color: #1565c0;
     }
-    .nba-top-player {
+    .nba-stats {
+      margin-top: 8px;
+      padding-left: 10px;
+      border-left: 3px solid #90caf9;
+    }
+    .nba-stat {
       font-size: 13px;
       color: #5d4037;
+      margin: 3px 0;
     }
     .source-section {
       margin-bottom: 35px;
@@ -320,7 +326,10 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
           <span> @ </span>
           <span class="${game.winner === 'home' ? 'nba-winner' : ''}">${escapeHtml(game.homeTeam)} ${game.homeScore}</span>
         </div>
-        <div class="nba-top-player">Top: ${escapeHtml(game.topPlayer)}${game.topPlayerStats ? ` - ${escapeHtml(game.topPlayerStats)}` : ''}</div>
+        <div class="nba-stats">
+          <div class="nba-stat"><strong>${escapeHtml(game.awayTeam)}:</strong> ${escapeHtml(game.awayTopScorer.name)} (${escapeHtml(game.awayTopScorer.value)}) | ${escapeHtml(game.awayTopRebounder.name)} (${escapeHtml(game.awayTopRebounder.value)}) | ${escapeHtml(game.awayTopAssists.name)} (${escapeHtml(game.awayTopAssists.value)})</div>
+          <div class="nba-stat"><strong>${escapeHtml(game.homeTeam)}:</strong> ${escapeHtml(game.homeTopScorer.name)} (${escapeHtml(game.homeTopScorer.value)}) | ${escapeHtml(game.homeTopRebounder.name)} (${escapeHtml(game.homeTopRebounder.value)}) | ${escapeHtml(game.homeTopAssists.name)} (${escapeHtml(game.homeTopAssists.value)})</div>
+        </div>
       </div>
 `;
     }
@@ -414,7 +423,8 @@ function formatDigestText(digests: SourceDigest[], nbaScores?: NBAScores): strin
       const winner = game.winner === 'home' ? game.homeTeam : game.awayTeam;
       text += `\n${game.awayTeam} ${game.awayScore} @ ${game.homeTeam} ${game.homeScore}`;
       text += ` (W: ${winner})\n`;
-      text += `  Top: ${game.topPlayer}${game.topPlayerStats ? ` - ${game.topPlayerStats}` : ''}\n`;
+      text += `  ${game.awayTeam}: ${game.awayTopScorer.name} (${game.awayTopScorer.value}) | ${game.awayTopRebounder.name} (${game.awayTopRebounder.value}) | ${game.awayTopAssists.name} (${game.awayTopAssists.value})\n`;
+      text += `  ${game.homeTeam}: ${game.homeTopScorer.name} (${game.homeTopScorer.value}) | ${game.homeTopRebounder.name} (${game.homeTopRebounder.value}) | ${game.homeTopAssists.name} (${game.homeTopAssists.value})\n`;
     }
     text += `\n${'='.repeat(50)}\n`;
   }

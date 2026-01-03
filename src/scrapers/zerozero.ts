@@ -15,14 +15,15 @@ export async function scrapeZeroZero(): Promise<SourceDigest> {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'pt-PT,pt;q=0.9,en;q=0.8',
-        'Accept-Charset': 'utf-8',
       },
       timeout: 15000,
-      responseType: 'text',
-      responseEncoding: 'utf8',
+      responseType: 'arraybuffer',
     });
 
-    const $ = cheerio.load(response.data);
+    // ZeroZero uses ISO-8859-1 encoding
+    const decoder = new TextDecoder('iso-8859-1');
+    const html = decoder.decode(response.data);
+    const $ = cheerio.load(html);
 
     let position = 0;
 
