@@ -200,14 +200,14 @@ async function fetchGameBoxScore(
           const athlete = athleteData.athlete;
           const stats = athleteData.stats;
 
-          if (!athlete?.displayName || !stats || stats.length < 14) continue;
+          if (!athlete?.displayName || !stats || stats.length < 10) continue;
 
-          // ESPN stats array order: MIN, FG, 3PT, FT, OREB, DREB, REB, AST, STL, BLK, TO, PF, +/-, PTS
-          // Index:                    0    1    2    3    4     5     6    7    8    9   10  11  12   13
+          // ESPN stats array order: MIN, PTS, FG, 3PT, FT, REB, AST, TO, STL, BLK, OREB, DREB, PF, +/-
+          // Index:                    0    1   2    3   4    5    6   7    8    9    10    11  12   13
           const minutes = stats[0];
-          const points = parseInt(stats[13]) || 0;
-          const rebounds = parseInt(stats[6]) || 0;
-          const assists = parseInt(stats[7]) || 0;
+          const points = parseInt(stats[1]) || 0;
+          const rebounds = parseInt(stats[5]) || 0;
+          const assists = parseInt(stats[6]) || 0;
           const steals = parseInt(stats[8]) || 0;
           const blocks = parseInt(stats[9]) || 0;
 
