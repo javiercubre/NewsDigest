@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import { Article, SourceDigest } from './types';
 import { escapeHtml } from './utils';
-import { NBAScores } from './scrapers/nba';
+import { NBAScores, PlayerOfTheNight, FeaturedPlayerStats } from './scrapers/nba';
 
 // Source logos - using Google's reliable favicon service
 const SOURCE_LOGOS: Record<string, { url: string; emoji: string }> = {
@@ -221,6 +221,86 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
       color: #5d4037;
       margin: 3px 0;
     }
+    .player-of-night {
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+    }
+    .player-of-night h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #8b6914;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .player-of-night .player-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 0 0 5px 0;
+    }
+    .player-of-night .player-team {
+      font-size: 14px;
+      color: #5d4037;
+      margin: 0 0 12px 0;
+    }
+    .player-of-night .statline {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin: 0 0 8px 0;
+    }
+    .player-of-night .game-score {
+      font-size: 12px;
+      color: #8b6914;
+    }
+    .featured-player {
+      background: linear-gradient(135deg, #006600 0%, #009900 100%);
+      border-radius: 10px;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .featured-player .flag {
+      font-size: 32px;
+    }
+    .featured-player .player-info {
+      flex-grow: 1;
+    }
+    .featured-player h3 {
+      margin: 0 0 5px 0;
+      font-size: 12px;
+      color: rgba(255,255,255,0.8);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .featured-player .player-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0 0 3px 0;
+    }
+    .featured-player .player-team {
+      font-size: 13px;
+      color: rgba(255,255,255,0.9);
+      margin: 0 0 8px 0;
+    }
+    .featured-player .statline {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      margin: 0;
+    }
+    .featured-player .dnp {
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      font-style: italic;
+    }
     .source-section {
       margin-bottom: 35px;
     }
@@ -350,6 +430,40 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
     <div class="nba-section">
       <h2>🏀 NBA Scores - ${escapeHtml(nbaScores.date)}</h2>
 `;
+
+    // Player of the Night
+    if (nbaScores.playerOfTheNight) {
+      const potn = nbaScores.playerOfTheNight;
+      html += `
+      <div class="player-of-night">
+        <h3>⭐ Player of the Night</h3>
+        <p class="player-name">${escapeHtml(potn.name)}</p>
+        <p class="player-team">${escapeHtml(potn.team)} • ${escapeHtml(potn.matchup)}</p>
+        <p class="statline">${potn.points} PTS | ${potn.rebounds} REB | ${potn.assists} AST | ${potn.steals} STL | ${potn.blocks} BLK</p>
+        <p class="game-score">Game Score: ${potn.gameScore}</p>
+      </div>
+`;
+    }
+
+    // Neemias Queta (Portuguese player spotlight)
+    if (nbaScores.neemiasQueta) {
+      const nq = nbaScores.neemiasQueta;
+      html += `
+      <div class="featured-player">
+        <span class="flag">🇵🇹</span>
+        <div class="player-info">
+          <h3>Portuguese Spotlight</h3>
+          <p class="player-name">${escapeHtml(nq.name)}</p>
+          <p class="player-team">${escapeHtml(nq.team)} • ${escapeHtml(nq.matchup)}</p>
+          ${nq.didPlay
+            ? `<p class="statline">${nq.minutes} MIN | ${nq.points} PTS | ${nq.rebounds} REB | ${nq.assists} AST | ${nq.steals} STL | ${nq.blocks} BLK</p>`
+            : `<p class="dnp">Did not play</p>`
+          }
+        </div>
+      </div>
+`;
+    }
+
     for (const game of nbaScores.games) {
       const winnerClass = game.winner === 'home' ? 'home' : 'away';
       html += `
@@ -360,8 +474,8 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
           <span class="${game.winner === 'home' ? 'nba-winner' : ''}">${escapeHtml(game.homeTeam)} ${game.homeScore}</span>
         </div>
         <div class="nba-stats">
-          <div class="nba-stat"><strong>${escapeHtml(game.awayTeam)}:</strong> ${escapeHtml(game.awayTopScorer.name)} (${escapeHtml(game.awayTopScorer.value)}) | ${escapeHtml(game.awayTopRebounder.name)} (${escapeHtml(game.awayTopRebounder.value)}) | ${escapeHtml(game.awayTopAssists.name)} (${escapeHtml(game.awayTopAssists.value)})</div>
-          <div class="nba-stat"><strong>${escapeHtml(game.homeTeam)}:</strong> ${escapeHtml(game.homeTopScorer.name)} (${escapeHtml(game.homeTopScorer.value)}) | ${escapeHtml(game.homeTopRebounder.name)} (${escapeHtml(game.homeTopRebounder.value)}) | ${escapeHtml(game.homeTopAssists.name)} (${escapeHtml(game.homeTopAssists.value)})</div>
+          <div class="nba-stat"><strong>${escapeHtml(game.awayTeam)}:</strong> ${escapeHtml(game.awayTopScorer.name)} (${escapeHtml(game.awayTopScorer.value)}) | ${escapeHtml(game.awayTopRebounder.name)} (${escapeHtml(game.awayTopRebounder.value)}) | ${escapeHtml(game.awayTopAssists.name)} (${escapeHtml(game.awayTopAssists.value)}) | ${escapeHtml(game.awayTopSteals.name)} (${escapeHtml(game.awayTopSteals.value)}) | ${escapeHtml(game.awayTopBlocks.name)} (${escapeHtml(game.awayTopBlocks.value)})</div>
+          <div class="nba-stat"><strong>${escapeHtml(game.homeTeam)}:</strong> ${escapeHtml(game.homeTopScorer.name)} (${escapeHtml(game.homeTopScorer.value)}) | ${escapeHtml(game.homeTopRebounder.name)} (${escapeHtml(game.homeTopRebounder.value)}) | ${escapeHtml(game.homeTopAssists.name)} (${escapeHtml(game.homeTopAssists.value)}) | ${escapeHtml(game.homeTopSteals.name)} (${escapeHtml(game.homeTopSteals.value)}) | ${escapeHtml(game.homeTopBlocks.name)} (${escapeHtml(game.homeTopBlocks.value)})</div>
         </div>
       </div>
 `;
@@ -412,7 +526,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
 
   html += `
     <div class="footer">
-      <p>Este digest é gerado automaticamente 4 vezes por dia.</p>
+      <p>Este digest é gerado automaticamente 3 vezes por dia.</p>
       <p>Fontes: Expresso, Público, ZeroZero, The Guardian</p>
     </div>
   </div>
@@ -458,12 +572,38 @@ function formatDigestText(digests: SourceDigest[], nbaScores?: NBAScores): strin
   if (nbaScores && nbaScores.games.length > 0) {
     text += `\n🏀 NBA SCORES - ${nbaScores.date}\n`;
     text += `${'─'.repeat(40)}\n`;
+
+    // Player of the Night
+    if (nbaScores.playerOfTheNight) {
+      const potn = nbaScores.playerOfTheNight;
+      text += `\n⭐ PLAYER OF THE NIGHT\n`;
+      text += `${potn.name} (${potn.team})\n`;
+      text += `${potn.matchup}\n`;
+      text += `${potn.points} PTS | ${potn.rebounds} REB | ${potn.assists} AST | ${potn.steals} STL | ${potn.blocks} BLK\n`;
+      text += `Game Score: ${potn.gameScore}\n`;
+      text += `${'─'.repeat(40)}\n`;
+    }
+
+    // Neemias Queta (Portuguese player spotlight)
+    if (nbaScores.neemiasQueta) {
+      const nq = nbaScores.neemiasQueta;
+      text += `\n🇵🇹 PORTUGUESE SPOTLIGHT\n`;
+      text += `${nq.name} (${nq.team})\n`;
+      text += `${nq.matchup}\n`;
+      if (nq.didPlay) {
+        text += `${nq.minutes} MIN | ${nq.points} PTS | ${nq.rebounds} REB | ${nq.assists} AST | ${nq.steals} STL | ${nq.blocks} BLK\n`;
+      } else {
+        text += `Did not play\n`;
+      }
+      text += `${'─'.repeat(40)}\n`;
+    }
+
     for (const game of nbaScores.games) {
       const winner = game.winner === 'home' ? game.homeTeam : game.awayTeam;
       text += `\n${game.awayTeam} ${game.awayScore} @ ${game.homeTeam} ${game.homeScore}`;
       text += ` (W: ${winner})\n`;
-      text += `  ${game.awayTeam}: ${game.awayTopScorer.name} (${game.awayTopScorer.value}) | ${game.awayTopRebounder.name} (${game.awayTopRebounder.value}) | ${game.awayTopAssists.name} (${game.awayTopAssists.value})\n`;
-      text += `  ${game.homeTeam}: ${game.homeTopScorer.name} (${game.homeTopScorer.value}) | ${game.homeTopRebounder.name} (${game.homeTopRebounder.value}) | ${game.homeTopAssists.name} (${game.homeTopAssists.value})\n`;
+      text += `  ${game.awayTeam}: ${game.awayTopScorer.name} (${game.awayTopScorer.value}) | ${game.awayTopRebounder.name} (${game.awayTopRebounder.value}) | ${game.awayTopAssists.name} (${game.awayTopAssists.value}) | ${game.awayTopSteals.name} (${game.awayTopSteals.value}) | ${game.awayTopBlocks.name} (${game.awayTopBlocks.value})\n`;
+      text += `  ${game.homeTeam}: ${game.homeTopScorer.name} (${game.homeTopScorer.value}) | ${game.homeTopRebounder.name} (${game.homeTopRebounder.value}) | ${game.homeTopAssists.name} (${game.homeTopAssists.value}) | ${game.homeTopSteals.name} (${game.homeTopSteals.value}) | ${game.homeTopBlocks.name} (${game.homeTopBlocks.value})\n`;
     }
     text += `\n${'='.repeat(50)}\n`;
   }
@@ -490,7 +630,7 @@ function formatDigestText(digests: SourceDigest[], nbaScores?: NBAScores): strin
   }
 
   text += `\n${'='.repeat(50)}\n`;
-  text += `Este digest é gerado automaticamente 4 vezes por dia.\n`;
+  text += `Este digest é gerado automaticamente 3 vezes por dia.\n`;
 
   return text;
 }

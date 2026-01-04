@@ -2,15 +2,13 @@ name: News Digest
 
 on:
   schedule:
-    # Run 4 times a day (UTC times)
-    # 7:00 AM Portugal (6:00 UTC in winter, 5:00 UTC in summer)
+    # Run 3 times a day (UTC times, Lisbon winter time)
+    # 06:00 Lisbon
     - cron: '0 6 * * *'
-    # 12:00 PM Portugal
-    - cron: '0 11 * * *'
-    # 6:00 PM Portugal
-    - cron: '0 17 * * *'
-    # 10:00 PM Portugal
-    - cron: '0 21 * * *'
+    # 12:00 Lisbon
+    - cron: '0 12 * * *'
+    # 18:00 Lisbon
+    - cron: '0 18 * * *'
   workflow_dispatch: # Allow manual trigger
     inputs:
       force_nba:
