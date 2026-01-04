@@ -161,9 +161,15 @@ function calculateGameScore(stats: PlayerGameStats): number {
   );
 }
 
+interface TeamLeaders {
+  steals: { name: string; value: number };
+  blocks: { name: string; value: number };
+}
+
 interface BoxScoreResult {
   players: PlayerGameStats[];
   neemiasQueta?: FeaturedPlayerStats;
+  teamLeaders: Record<string, TeamLeaders>; // keyed by team abbreviation
 }
 
 /**
@@ -176,6 +182,7 @@ async function fetchGameBoxScore(
 ): Promise<BoxScoreResult> {
   const players: PlayerGameStats[] = [];
   let neemiasQueta: FeaturedPlayerStats | undefined;
+  const teamLeaders: Record<string, TeamLeaders> = {};
 
   try {
     const response = await axios.get<ESPNBoxScoreResponse>(
@@ -190,10 +197,14 @@ async function fetchGameBoxScore(
     );
 
     const boxscore = response.data?.boxscore;
-    if (!boxscore?.players) return { players };
+    if (!boxscore?.players) return { players, teamLeaders };
 
     for (const team of boxscore.players) {
       const teamAbbr = team.team?.abbreviation || 'UNK';
+
+      // Initialize team leaders tracking
+      let topSteals = { name: 'N/A', value: 0 };
+      let topBlocks = { name: 'N/A', value: 0 };
 
       for (const statGroup of team.statistics || []) {
         for (const athleteData of statGroup.athletes || []) {
@@ -228,8 +239,16 @@ async function fetchGameBoxScore(
             };
           }
 
-          // Skip players who didn't play (DNP) for the main player list
+          // Skip players who didn't play (DNP)
           if (minutes === '0' || minutes === 'DNP' || minutes === '--') continue;
+
+          // Track team leaders for steals and blocks
+          if (steals > topSteals.value) {
+            topSteals = { name: athlete.displayName, value: steals };
+          }
+          if (blocks > topBlocks.value) {
+            topBlocks = { name: athlete.displayName, value: blocks };
+          }
 
           players.push({
             name: athlete.displayName,
@@ -243,18 +262,28 @@ async function fetchGameBoxScore(
           });
         }
       }
+
+      // Store team leaders
+      teamLeaders[teamAbbr] = {
+        steals: topSteals,
+        blocks: topBlocks,
+      };
     }
   } catch (error) {
     // Silently fail for individual game box scores - we'll still have scoreboard data
     console.log(`Failed to fetch box score for game ${gameId}`);
   }
 
-  return { players, neemiasQueta };
+  return { players, neemiasQueta, teamLeaders };
 }
+
+// Maps game ID to team leaders for steals/blocks
+type GameLeadersMap = Record<string, Record<string, TeamLeaders>>;
 
 interface NightlyStatsResult {
   playerOfTheNight?: PlayerOfTheNight;
   neemiasQueta?: FeaturedPlayerStats;
+  gameLeaders: GameLeadersMap;
 }
 
 /**
@@ -263,7 +292,9 @@ interface NightlyStatsResult {
 async function findNightlyStats(
   gameIds: Array<{ id: string; matchup: string }>
 ): Promise<NightlyStatsResult> {
-  if (gameIds.length === 0) return {};
+  const gameLeaders: GameLeadersMap = {};
+
+  if (gameIds.length === 0) return { gameLeaders };
 
   const allPlayers: PlayerGameStats[] = [];
   let neemiasQueta: FeaturedPlayerStats | undefined;
@@ -274,8 +305,15 @@ async function findNightlyStats(
   );
   const results = await Promise.all(boxScorePromises);
 
-  for (const result of results) {
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    const gameId = gameIds[i].id;
+
     allPlayers.push(...result.players);
+
+    // Store team leaders for this game
+    gameLeaders[gameId] = result.teamLeaders;
+
     // Track Neemias Queta if found in any game
     if (result.neemiasQueta) {
       neemiasQueta = result.neemiasQueta;
@@ -308,7 +346,7 @@ async function findNightlyStats(
       }
     : undefined;
 
-  return { playerOfTheNight, neemiasQueta };
+  return { playerOfTheNight, neemiasQueta, gameLeaders };
 }
 
 /**
@@ -414,30 +452,8 @@ export async function fetchNBAScores(): Promise<NBAScores> {
           ? { name: awayAssistsData.name, value: `${awayAssistsData.displayValue} AST` }
           : { name: 'N/A', value: '' };
 
-        // Get top steals for each team
-        const homeStealsData = getLeaderStat(home, 'steals');
-        const awayStealsData = getLeaderStat(away, 'steals');
-
-        const homeTopSteals: PlayerStat = homeStealsData
-          ? { name: homeStealsData.name, value: `${homeStealsData.displayValue} STL` }
-          : { name: 'N/A', value: '' };
-
-        const awayTopSteals: PlayerStat = awayStealsData
-          ? { name: awayStealsData.name, value: `${awayStealsData.displayValue} STL` }
-          : { name: 'N/A', value: '' };
-
-        // Get top blocks for each team
-        const homeBlocksData = getLeaderStat(home, 'blocks');
-        const awayBlocksData = getLeaderStat(away, 'blocks');
-
-        const homeTopBlocks: PlayerStat = homeBlocksData
-          ? { name: homeBlocksData.name, value: `${homeBlocksData.displayValue} BLK` }
-          : { name: 'N/A', value: '' };
-
-        const awayTopBlocks: PlayerStat = awayBlocksData
-          ? { name: awayBlocksData.name, value: `${awayBlocksData.displayValue} BLK` }
-          : { name: 'N/A', value: '' };
-
+        // Steals and blocks will be populated from box scores later
+        // (not available in scoreboard API)
         games.push({
           homeTeam: homeAbbr,
           awayTeam: awayAbbr,
@@ -450,16 +466,44 @@ export async function fetchNBAScores(): Promise<NBAScores> {
           awayTopRebounder,
           homeTopAssists,
           awayTopAssists,
-          homeTopSteals,
-          awayTopSteals,
-          homeTopBlocks,
-          awayTopBlocks,
+          homeTopSteals: { name: 'N/A', value: '' },
+          awayTopSteals: { name: 'N/A', value: '' },
+          homeTopBlocks: { name: 'N/A', value: '' },
+          awayTopBlocks: { name: 'N/A', value: '' },
         });
       }
     }
 
-    // Find Player of the Night and track Neemias Queta
-    const { playerOfTheNight, neemiasQueta } = await findNightlyStats(completedGameIds);
+    // Find Player of the Night, track Neemias Queta, and get steals/blocks leaders
+    const { playerOfTheNight, neemiasQueta, gameLeaders } = await findNightlyStats(completedGameIds);
+
+    // Update games with steals/blocks leaders from box scores
+    for (let i = 0; i < games.length; i++) {
+      const gameId = completedGameIds[i]?.id;
+      const leaders = gameLeaders[gameId];
+      if (leaders) {
+        const game = games[i];
+        const homeLeaders = leaders[game.homeTeam];
+        const awayLeaders = leaders[game.awayTeam];
+
+        if (homeLeaders) {
+          game.homeTopSteals = homeLeaders.steals.value > 0
+            ? { name: homeLeaders.steals.name, value: `${homeLeaders.steals.value} STL` }
+            : { name: 'N/A', value: '0 STL' };
+          game.homeTopBlocks = homeLeaders.blocks.value > 0
+            ? { name: homeLeaders.blocks.name, value: `${homeLeaders.blocks.value} BLK` }
+            : { name: 'N/A', value: '0 BLK' };
+        }
+        if (awayLeaders) {
+          game.awayTopSteals = awayLeaders.steals.value > 0
+            ? { name: awayLeaders.steals.name, value: `${awayLeaders.steals.value} STL` }
+            : { name: 'N/A', value: '0 STL' };
+          game.awayTopBlocks = awayLeaders.blocks.value > 0
+            ? { name: awayLeaders.blocks.name, value: `${awayLeaders.blocks.value} BLK` }
+            : { name: 'N/A', value: '0 BLK' };
+        }
+      }
+    }
 
     return {
       games,
