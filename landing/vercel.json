@@ -19,10 +19,4 @@
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ],
-  "env": {
-    "GOOGLE_SERVICE_ACCOUNT_EMAIL": "@google-service-account-email",
-    "GOOGLE_PRIVATE_KEY": "@google-private-key",
-    "GOOGLE_SHEET_ID": "@google-sheet-id"
-  }
-}
+  ]}
