@@ -6,8 +6,11 @@ Automated news digest that scrapes headlines from Portuguese and international n
 
 - **Expresso** (Portugal) - https://expresso.pt
 - **Público** (Portugal) - https://www.publico.pt
+- **Observador** (Portugal) - https://observador.pt
 - **ZeroZero** (Sports) - https://www.zerozero.pt
-- **The New York Times** (International) - https://www.nytimes.com
+- **The Guardian** (International) - https://www.theguardian.com
+
+Each article includes a preview/summary when available for better context.
 
 ## Schedule
 
@@ -19,6 +22,16 @@ The digest runs automatically via GitHub Actions at:
 | 12:00 PM | Midday digest |
 | 6:00 PM | Evening digest |
 | 10:00 PM | Night digest |
+
+## Features
+
+- **Multi-source aggregation**: Scrapes headlines from 5 news sources
+- **Article previews**: Includes summaries/excerpts when available for better context
+- **Top Headlines section**: Priority-ranked articles from all sources
+- **NBA scores**: Morning digest includes yesterday's NBA games with player stats
+- **Portuguese player spotlight**: Tracks Neemias Queta's performance
+- **Priority algorithm**: Articles ranked by position, headline size, and metadata
+- **HTML & plain text**: Beautiful HTML emails with plain text fallback
 
 ## Setup
 
@@ -97,11 +110,14 @@ news-digest/
 │   ├── scrapers/
 │   │   ├── expresso.ts    # Expresso scraper
 │   │   ├── publico.ts     # Público scraper
+│   │   ├── observador.ts  # Observador scraper
 │   │   ├── zerozero.ts    # ZeroZero scraper
-│   │   ├── nyt.ts         # NYT scraper
+│   │   ├── guardian.ts    # The Guardian scraper
+│   │   ├── nba.ts         # NBA scores (morning digest)
 │   │   └── index.ts       # Scraper exports
 │   ├── email.ts           # Email sending + HTML template
 │   ├── types.ts           # TypeScript types
+│   ├── utils.ts           # Text sanitization & priority
 │   └── index.ts           # Main entry point
 ├── .github/
 │   └── workflows/
