@@ -21,6 +21,8 @@ export interface NBAGame {
   awayTopSteals: PlayerStat;
   homeTopBlocks: PlayerStat;
   awayTopBlocks: PlayerStat;
+  homeTopGameScore: PlayerStat;
+  awayTopGameScore: PlayerStat;
 }
 
 export interface PlayerOfTheNight {
@@ -164,6 +166,7 @@ function calculateGameScore(stats: PlayerGameStats): number {
 interface TeamLeaders {
   steals: { name: string; value: number };
   blocks: { name: string; value: number };
+  gameScore: { name: string; value: number; stats: string }; // stats will be "X PTS, Y REB, Z AST"
 }
 
 interface BoxScoreResult {
@@ -205,6 +208,7 @@ async function fetchGameBoxScore(
       // Initialize team leaders tracking
       let topSteals = { name: 'N/A', value: 0 };
       let topBlocks = { name: 'N/A', value: 0 };
+      let topGameScore = { name: 'N/A', value: 0, stats: '' };
 
       for (const statGroup of team.statistics || []) {
         for (const athleteData of statGroup.athletes || []) {
@@ -250,7 +254,8 @@ async function fetchGameBoxScore(
             topBlocks = { name: athlete.displayName, value: blocks };
           }
 
-          players.push({
+          // Calculate game score and track top performer
+          const playerStats: PlayerGameStats = {
             name: athlete.displayName,
             team: teamAbbr,
             points,
@@ -259,7 +264,18 @@ async function fetchGameBoxScore(
             steals,
             blocks,
             matchup,
-          });
+          };
+          const gameScore = calculateGameScore(playerStats);
+
+          if (gameScore > topGameScore.value) {
+            topGameScore = {
+              name: athlete.displayName,
+              value: Math.round(gameScore * 10) / 10,
+              stats: `${points} PTS, ${rebounds} REB, ${assists} AST`,
+            };
+          }
+
+          players.push(playerStats);
         }
       }
 
@@ -267,6 +283,7 @@ async function fetchGameBoxScore(
       teamLeaders[teamAbbr] = {
         steals: topSteals,
         blocks: topBlocks,
+        gameScore: topGameScore,
       };
     }
   } catch (error) {
@@ -452,7 +469,7 @@ export async function fetchNBAScores(): Promise<NBAScores> {
           ? { name: awayAssistsData.name, value: `${awayAssistsData.displayValue} AST` }
           : { name: 'N/A', value: '' };
 
-        // Steals and blocks will be populated from box scores later
+        // Steals, blocks, and game score will be populated from box scores later
         // (not available in scoreboard API)
         games.push({
           homeTeam: homeAbbr,
@@ -470,14 +487,16 @@ export async function fetchNBAScores(): Promise<NBAScores> {
           awayTopSteals: { name: 'N/A', value: '' },
           homeTopBlocks: { name: 'N/A', value: '' },
           awayTopBlocks: { name: 'N/A', value: '' },
+          homeTopGameScore: { name: 'N/A', value: '' },
+          awayTopGameScore: { name: 'N/A', value: '' },
         });
       }
     }
 
-    // Find Player of the Night, track Neemias Queta, and get steals/blocks leaders
+    // Find Player of the Night, track Neemias Queta, and get steals/blocks/game score leaders
     const { playerOfTheNight, neemiasQueta, gameLeaders } = await findNightlyStats(completedGameIds);
 
-    // Update games with steals/blocks leaders from box scores
+    // Update games with steals/blocks/game score leaders from box scores
     for (let i = 0; i < games.length; i++) {
       const gameId = completedGameIds[i]?.id;
       const leaders = gameLeaders[gameId];
@@ -493,6 +512,9 @@ export async function fetchNBAScores(): Promise<NBAScores> {
           game.homeTopBlocks = homeLeaders.blocks.value > 0
             ? { name: homeLeaders.blocks.name, value: `${homeLeaders.blocks.value} BLK` }
             : { name: 'N/A', value: '0 BLK' };
+          game.homeTopGameScore = homeLeaders.gameScore.value > 0
+            ? { name: homeLeaders.gameScore.name, value: `GmSc: ${homeLeaders.gameScore.value} (${homeLeaders.gameScore.stats})` }
+            : { name: 'N/A', value: '' };
         }
         if (awayLeaders) {
           game.awayTopSteals = awayLeaders.steals.value > 0
@@ -501,6 +523,9 @@ export async function fetchNBAScores(): Promise<NBAScores> {
           game.awayTopBlocks = awayLeaders.blocks.value > 0
             ? { name: awayLeaders.blocks.name, value: `${awayLeaders.blocks.value} BLK` }
             : { name: 'N/A', value: '0 BLK' };
+          game.awayTopGameScore = awayLeaders.gameScore.value > 0
+            ? { name: awayLeaders.gameScore.name, value: `GmSc: ${awayLeaders.gameScore.value} (${awayLeaders.gameScore.stats})` }
+            : { name: 'N/A', value: '' };
         }
       }
     }
