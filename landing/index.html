@@ -5,6 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NewsDigest - Notícias Portuguesas na Sua Caixa de Entrada</title>
   <meta name="description" content="Receba as melhores notícias de Portugal diretamente no seu email, 4x por dia. Feito para a comunidade portuguesa.">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://landing-theta-ecru.vercel.app/">
+  <meta property="og:title" content="NewsDigest - Notícias Portuguesas na Sua Caixa de Entrada">
+  <meta property="og:description" content="Receba as melhores notícias de Portugal diretamente no seu email, 4x por dia. Feito para a comunidade portuguesa.">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://landing-theta-ecru.vercel.app/">
+  <meta name="twitter:title" content="NewsDigest - Notícias Portuguesas na Sua Caixa de Entrada">
+  <meta name="twitter:description" content="Receba as melhores notícias de Portugal diretamente no seu email, 4x por dia. Feito para a comunidade portuguesa.">
+
+  <!-- Theme color -->
+  <meta name="theme-color" content="#667eea">
   <style>
     * {
       margin: 0;
@@ -71,9 +86,14 @@
       flex: 1;
       padding: 16px 20px;
       font-size: 1rem;
-      border: none;
+      border: 2px solid transparent;
       border-radius: 8px;
       outline: none;
+    }
+
+    .email-form input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
     }
 
     .email-form button {
@@ -91,6 +111,11 @@
     .email-form button:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .email-form button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.5), 0 10px 25px rgba(0,0,0,0.2);
     }
 
     .social-proof {
@@ -265,6 +290,11 @@
       box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
     }
 
+    .cta-button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.5), 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
     /* FAQ Section */
     .faq {
       background: #f8f9fa;
@@ -347,6 +377,19 @@
       display: block;
     }
 
+    /* Visually hidden but accessible to screen readers */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     /* Suggest Source Section */
     .suggest-source {
       background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
@@ -377,9 +420,14 @@
       flex: 1;
       padding: 14px 18px;
       font-size: 1rem;
-      border: none;
+      border: 2px solid transparent;
       border-radius: 8px;
       outline: none;
+    }
+
+    .source-form input:focus {
+      border-color: #764ba2;
+      box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.3);
     }
 
     .source-form button {
@@ -399,6 +447,11 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
 
+    .source-form button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.5), 0 10px 25px rgba(0,0,0,0.2);
+    }
+
     @media (max-width: 768px) {
       .source-form {
         flex-direction: column;
@@ -415,16 +468,18 @@
       <p>Receba um digest curado 4x por dia com notícias do Expresso, Público, Observador e The Guardian. Perfeito para portugueses no estrangeiro.</p>
 
       <form class="email-form" id="signup-form">
+        <label for="email-input" class="sr-only">Endereço de email</label>
         <input
           type="email"
           id="email-input"
           placeholder="O seu melhor email"
           required
+          aria-describedby="signup-hint"
         >
         <button type="submit">Começar Grátis</button>
       </form>
 
-      <div class="success-message" id="success-message">
+      <div class="success-message" id="success-message" role="status" aria-live="polite">
         ✓ Obrigado! Vai receber o primeiro digest em breve.
       </div>
 
@@ -468,6 +523,12 @@
           <h3>4x Por Dia</h3>
           <p>Manhã (7h), Meio-dia (12h), Tarde (18h) e Noite (22h) - Hora de Portugal</p>
         </div>
+
+        <div class="feature">
+          <div class="feature-icon">🔒</div>
+          <h3>Sem Spam, Sem Tracking</h3>
+          <p>Os seus dados são seus. Apenas guardamos o email e nunca vendemos informação</p>
+        </div>
       </div>
     </div>
   </section>
@@ -479,6 +540,7 @@
       <p>Diga-nos que site gostaria de ver no NewsDigest</p>
 
       <form class="source-form" id="source-form">
+        <label for="source-url" class="sr-only">URL da fonte de notícias</label>
         <input
           type="url"
           id="source-url"
@@ -488,7 +550,7 @@
         <button type="submit">Sugerir</button>
       </form>
 
-      <div class="success-message" id="source-success-message">
+      <div class="success-message" id="source-success-message" role="status" aria-live="polite">
         Obrigado pela sugestão! Vamos analisar.
       </div>
     </div>
@@ -548,7 +610,7 @@
             <li>Acesso à app mobile</li>
             <li>Suporte prioritário</li>
           </ul>
-          <button class="cta-button" onclick="alert('Em breve! Deixe o seu email para early access.')">Escolher Premium</button>
+          <a href="#signup-form" class="cta-button" onclick="document.getElementById('email-input').focus();">Escolher Premium</a>
         </div>
 
         <div class="pricing-card">
@@ -561,7 +623,7 @@
             <li>Badge de fundador</li>
             <li>50% desconto - só agora!</li>
           </ul>
-          <button class="cta-button" onclick="alert('Oferta limitada! Deixe o email para garantir.')">Garantir Desconto</button>
+          <a href="#signup-form" class="cta-button" onclick="document.getElementById('email-input').focus();">Garantir Desconto</a>
         </div>
       </div>
     </div>
@@ -606,15 +668,17 @@
       <p>Junte-se a centenas de portugueses que já recebem o NewsDigest</p>
 
       <form class="email-form" id="footer-signup-form">
+        <label for="footer-email-input" class="sr-only">Endereço de email</label>
         <input
           type="email"
+          id="footer-email-input"
           placeholder="O seu melhor email"
           required
         >
         <button type="submit">Começar Grátis</button>
       </form>
 
-      <div class="success-message" id="footer-success-message">
+      <div class="success-message" id="footer-success-message" role="status" aria-live="polite">
         ✓ Obrigado! Vai receber o primeiro digest em breve.
       </div>
 
