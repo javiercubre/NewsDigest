@@ -147,8 +147,10 @@ The NBA module (`src/scrapers/nba.ts`) provides comprehensive game data:
 
 **Game Score Formula:**
 ```typescript
-GameScore = PTS + 0.4*REB + 0.7*AST + 2*STL + 2*BLK
+GameScore = PTS + (0.4 * REB) + (0.7 * AST) + (2 * STL) + (2 * BLK)
 ```
+
+This formula weights defensive stats (steals and blocks) at 2x because they're rarer and more impactful. A player with 30 PTS, 5 REB, 5 AST, 2 STL, 1 BLK would score: 30 + 2 + 3.5 + 4 + 2 = 41.5
 
 **Player of the Night:** Best performer across all games based on game score
 
