@@ -1,0 +1,22 @@
+{
+  "name": "newsdigest-landing",
+  "version": "1.0.0",
+  "description": "Landing page for NewsDigest - Portuguese news + NBA in your inbox",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "news",
+    "digest",
+    "portugal",
+    "nba",
+    "newsletter"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "googleapis": "^128.0.0"
+  }
+}

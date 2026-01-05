@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "env": {
+    "GOOGLE_SERVICE_ACCOUNT_EMAIL": "@google-service-account-email",
+    "GOOGLE_PRIVATE_KEY": "@google-private-key",
+    "GOOGLE_SHEET_ID": "@google-sheet-id"
+  }
+}
