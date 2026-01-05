@@ -346,6 +346,64 @@
     .success-message.show {
       display: block;
     }
+
+    /* Suggest Source Section */
+    .suggest-source {
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+      padding: 60px 20px;
+      text-align: center;
+      color: white;
+    }
+
+    .suggest-source h2 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+    }
+
+    .suggest-source p {
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+      opacity: 0.95;
+    }
+
+    .source-form {
+      display: flex;
+      gap: 10px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .source-form input {
+      flex: 1;
+      padding: 14px 18px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    .source-form button {
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #764ba2;
+      background: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .source-form button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    @media (max-width: 768px) {
+      .source-form {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
@@ -416,6 +474,28 @@
           <h3>4x Por Dia</h3>
           <p>Manhã (7h), Meio-dia (12h), Tarde (18h) e Noite (22h) - Hora de Portugal</p>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Suggest Source Section -->
+  <section class="suggest-source">
+    <div class="container">
+      <h2>Quer outra fonte de notícias?</h2>
+      <p>Diga-nos que site gostaria de ver no NewsDigest</p>
+
+      <form class="source-form" id="source-form">
+        <input
+          type="url"
+          id="source-url"
+          placeholder="https://exemplo.com"
+          required
+        >
+        <button type="submit">Sugerir</button>
+      </form>
+
+      <div class="success-message" id="source-success-message">
+        Obrigado pela sugestão! Vamos analisar.
       </div>
     </div>
   </section>
@@ -593,6 +673,23 @@
 
     document.getElementById('footer-signup-form').addEventListener('submit', (e) => {
       handleSubmit(e, 'footer-signup-form', 'footer-success-message');
+    });
+
+    // Handle source suggestion form
+    document.getElementById('source-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const url = document.getElementById('source-url').value;
+      const successMessage = document.getElementById('source-success-message');
+
+      console.log('Source suggestion submitted:', url);
+
+      successMessage.classList.add('show');
+      document.getElementById('source-form').reset();
+
+      setTimeout(() => {
+        successMessage.classList.remove('show');
+      }, 5000);
     });
 
     // Smooth scroll for anchor links
