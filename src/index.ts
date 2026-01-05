@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { scrapeExpresso, scrapePublico, scrapeZeroZero, scrapeGuardian } from './scrapers';
+import { scrapeExpresso, scrapePublico, scrapeZeroZero, scrapeGuardian, scrapeObservador } from './scrapers';
 import { fetchNBAScores, isMorningDigest, NBAScores } from './scrapers/nba';
 import { sendDigestEmail } from './email';
 import { SourceDigest } from './types';
@@ -14,6 +14,7 @@ async function scrapeAllSources(): Promise<SourceDigest[]> {
   const scrapers = [
     { name: 'Expresso', fn: scrapeExpresso },
     { name: 'Público', fn: scrapePublico },
+    { name: 'Observador', fn: scrapeObservador },
     { name: 'ZeroZero', fn: scrapeZeroZero },
     { name: 'The Guardian', fn: scrapeGuardian },
   ];
