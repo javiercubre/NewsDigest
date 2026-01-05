@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NewsDigest - Notícias Portuguesas + NBA na Sua Caixa de Entrada</title>
+  <meta name="description" content="Receba as melhores notícias de Portugal e resultados da NBA diretamente no seu email, 4x por dia. Feito para a comunidade portuguesa e fãs de basquetebol.">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+      padding: 60px 20px;
+    }
+
+    .hero-content {
+      max-width: 700px;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+
+    .hero .subtitle {
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      opacity: 0.95;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      margin-bottom: 40px;
+      opacity: 0.9;
+    }
+
+    /* Email Form */
+    .email-form {
+      display: flex;
+      gap: 10px;
+      max-width: 500px;
+      margin: 0 auto 20px;
+    }
+
+    .email-form input {
+      flex: 1;
+      padding: 16px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    .email-form button {
+      padding: 16px 32px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #667eea;
+      background: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .email-form button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .social-proof {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    /* Features Section */
+    .features {
+      background: white;
+      padding: 80px 20px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #666;
+      margin-bottom: 60px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .feature {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+
+    .feature h3 {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .feature p {
+      color: #666;
+      font-size: 1rem;
+    }
+
+    /* Preview Section */
+    .preview {
+      background: #f8f9fa;
+      padding: 80px 20px;
+    }
+
+    .preview-image {
+      max-width: 800px;
+      margin: 40px auto;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      border: 8px solid white;
+    }
+
+    .preview-image img {
+      width: 100%;
+      border-radius: 4px;
+      display: block;
+    }
+
+    /* Pricing Section */
+    .pricing {
+      background: white;
+      padding: 80px 20px;
+    }
+
+    .pricing-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .pricing-card {
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 40px 30px;
+      text-align: center;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .pricing-card.featured {
+      border-color: #667eea;
+      border-width: 3px;
+      position: relative;
+    }
+
+    .pricing-card.featured::before {
+      content: "MAIS POPULAR";
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #667eea;
+      color: white;
+      padding: 5px 20px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .price {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #333;
+      margin: 20px 0;
+    }
+
+    .price span {
+      font-size: 1.5rem;
+      color: #666;
+    }
+
+    .pricing-features {
+      list-style: none;
+      margin: 30px 0;
+      text-align: left;
+    }
+
+    .pricing-features li {
+      padding: 10px 0;
+      color: #666;
+    }
+
+    .pricing-features li::before {
+      content: "✓ ";
+      color: #667eea;
+      font-weight: 700;
+      margin-right: 10px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 16px 32px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: white;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    /* FAQ Section */
+    .faq {
+      background: #f8f9fa;
+      padding: 80px 20px;
+    }
+
+    .faq-item {
+      max-width: 700px;
+      margin: 0 auto 30px;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+    }
+
+    .faq-item h3 {
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .faq-item p {
+      color: #666;
+      line-height: 1.7;
+    }
+
+    /* Footer CTA */
+    .footer-cta {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-align: center;
+      padding: 80px 20px;
+    }
+
+    .footer-cta h2 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    .footer-cta p {
+      font-size: 1.2rem;
+      margin-bottom: 40px;
+      opacity: 0.95;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero .subtitle {
+        font-size: 1.2rem;
+      }
+
+      .email-form {
+        flex-direction: column;
+      }
+
+      .section-title {
+        font-size: 2rem;
+      }
+
+      .price {
+        font-size: 2.5rem;
+      }
+    }
+
+    /* Success Message */
+    .success-message {
+      display: none;
+      background: #4caf50;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>📰 Notícias de Portugal + 🏀 NBA<br>Na Sua Caixa de Entrada</h1>
+      <p class="subtitle">Mantenha-se informado com o melhor de Portugal e da NBA</p>
+      <p>Receba um digest curado 4x por dia com notícias do Expresso, Público, Observador e resultados completos da NBA. Perfeito para portugueses no estrangeiro e fãs de basquetebol.</p>
+
+      <form class="email-form" id="signup-form">
+        <input
+          type="email"
+          id="email-input"
+          placeholder="O seu melhor email"
+          required
+        >
+        <button type="submit">Começar Grátis</button>
+      </form>
+
+      <div class="success-message" id="success-message">
+        ✓ Obrigado! Vai receber o primeiro digest em breve.
+      </div>
+
+      <p class="social-proof">🚀 Junte-se a centenas de leitores satisfeitos</p>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features">
+    <div class="container">
+      <h2 class="section-title">Porquê NewsDigest?</h2>
+      <p class="section-subtitle">Tudo o que precisa saber, sem ruído, diretamente no seu email</p>
+
+      <div class="features-grid">
+        <div class="feature">
+          <div class="feature-icon">🇵🇹</div>
+          <h3>Notícias de Portugal</h3>
+          <p>As principais manchetes do Expresso, Público e Observador em um só lugar</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">🏀</div>
+          <h3>Resultados da NBA</h3>
+          <p>Todos os jogos de ontem com estatísticas detalhadas e destaques de Neemias Queta</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">⚽</div>
+          <h3>Desporto Português</h3>
+          <p>Cobertura completa do futebol português via ZeroZero</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">🌍</div>
+          <h3>Notícias Internacionais</h3>
+          <p>O melhor do The Guardian para contexto global</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">📊</div>
+          <h3>Priorização Inteligente</h3>
+          <p>Algoritmo que destaca as notícias mais importantes primeiro</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">📱</div>
+          <h3>4x Por Dia</h3>
+          <p>Manhã (7h), Meio-dia (12h), Tarde (18h) e Noite (22h) - Hora de Portugal</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Preview Section -->
+  <section class="preview">
+    <div class="container">
+      <h2 class="section-title">Veja Como Funciona</h2>
+      <p class="section-subtitle">Email bonito, organizado e fácil de ler em qualquer dispositivo</p>
+
+      <div class="preview-image">
+        <div style="background: white; padding: 40px; text-align: left;">
+          <h3 style="margin-bottom: 20px; color: #333;">📰 News Digest - Manhã (05/01)</h3>
+          <div style="background: #fff8e1; padding: 20px; border-radius: 8px; border: 2px solid #ffc107; margin-bottom: 20px;">
+            <h4 style="color: #e65100; margin-bottom: 15px;">⭐ Top Headlines</h4>
+            <p style="margin: 10px 0;"><strong>Governo anuncia novas medidas económicas</strong></p>
+            <p style="color: #666; font-size: 0.9rem; margin: 5px 0;">Expresso • Priority: 9/10</p>
+          </div>
+          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; border: 2px solid #1976d2;">
+            <h4 style="color: #1565c0; margin-bottom: 15px;">🏀 NBA Scores - Saturday, January 4</h4>
+            <p style="margin: 10px 0;"><strong>LAL 115 @ BOS 120</strong></p>
+            <p style="color: #666; font-size: 0.9rem;">Best: Jayson Tatum (GmSc: 48.3 - 32 PTS, 9 REB, 6 AST)</p>
+          </div>
+          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+            <h4 style="color: #2c3e50; margin-bottom: 15px;">📰 Expresso</h4>
+            <p style="margin: 10px 0;">• Política: Nova estratégia económica apresentada</p>
+            <p style="margin: 10px 0;">• Sociedade: Mudanças no sistema de saúde</p>
+            <p style="color: #999; font-size: 0.85rem; margin-top: 15px;">+ 13 mais artigos...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="pricing">
+    <div class="container">
+      <h2 class="section-title">Planos Simples e Transparentes</h2>
+      <p class="section-subtitle">Comece grátis, faça upgrade quando quiser</p>
+
+      <div class="pricing-cards">
+        <div class="pricing-card">
+          <h3>Grátis</h3>
+          <div class="price">€0<span>/mês</span></div>
+          <ul class="pricing-features">
+            <li>3 fontes de notícias</li>
+            <li>1 digest por dia</li>
+            <li>Resultados NBA (manhã)</li>
+            <li>Email HTML bonito</li>
+          </ul>
+          <a href="#signup-form" class="cta-button">Começar Grátis</a>
+        </div>
+
+        <div class="pricing-card featured">
+          <h3>Premium</h3>
+          <div class="price">€9<span>/mês</span></div>
+          <ul class="pricing-features">
+            <li>Todas as 5 fontes</li>
+            <li>4 digests por dia</li>
+            <li>Horários personalizados</li>
+            <li>Escolha suas fontes</li>
+            <li>Acesso à app mobile</li>
+            <li>Suporte prioritário</li>
+          </ul>
+          <button class="cta-button" onclick="alert('Em breve! Deixe o seu email para early access.')">Escolher Premium</button>
+        </div>
+
+        <div class="pricing-card">
+          <h3>Lifetime</h3>
+          <div class="price">€99<span>uma vez</span></div>
+          <ul class="pricing-features">
+            <li>Tudo do Premium</li>
+            <li>Acesso vitalício</li>
+            <li>Atualizações grátis</li>
+            <li>Badge de fundador</li>
+            <li>50% desconto - só agora!</li>
+          </ul>
+          <button class="cta-button" onclick="alert('Oferta limitada! Deixe o email para garantir.')">Garantir Desconto</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="faq">
+    <div class="container">
+      <h2 class="section-title">Perguntas Frequentes</h2>
+
+      <div class="faq-item">
+        <h3>Como funciona o período grátis?</h3>
+        <p>Pode usar a versão gratuita indefinidamente com 3 fontes e 1 digest por dia. Sem cartão de crédito necessário.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Posso cancelar a qualquer momento?</h3>
+        <p>Sim! Cancele quando quiser, sem taxas ou perguntas. O seu acesso continua até ao fim do período pago.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Que fontes estão incluídas?</h3>
+        <p>Expresso, Público, Observador (Portugal), ZeroZero (Desporto), The Guardian (Internacional) e resultados completos da NBA com estatísticas.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Funciona em mobile?</h3>
+        <p>Sim! Os emails são otimizados para todos os dispositivos. A app mobile está em desenvolvimento.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Os meus dados estão seguros?</h3>
+        <p>Absolutamente. Apenas guardamos o seu email. Sem tracking, sem venda de dados, sem spam. Pode apagar a conta a qualquer momento.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer CTA -->
+  <section class="footer-cta">
+    <div class="container">
+      <h2>Pronto Para Começar?</h2>
+      <p>Junte-se a centenas de portugueses e fãs de NBA que já recebem o NewsDigest</p>
+
+      <form class="email-form" id="footer-signup-form">
+        <input
+          type="email"
+          placeholder="O seu melhor email"
+          required
+        >
+        <button type="submit">Começar Grátis</button>
+      </form>
+
+      <div class="success-message" id="footer-success-message">
+        ✓ Obrigado! Vai receber o primeiro digest em breve.
+      </div>
+
+      <p style="margin-top: 40px; opacity: 0.8; font-size: 0.9rem;">
+        Feito com ❤️ para a comunidade portuguesa •
+        <a href="https://github.com/javiercubre/NewsDigest" style="color: white;">Open Source no GitHub</a>
+      </p>
+    </div>
+  </section>
+
+  <script>
+    // Handle form submissions
+    function handleSubmit(e, formId, successId) {
+      e.preventDefault();
+
+      const form = document.getElementById(formId);
+      const email = form.querySelector('input[type="email"]').value;
+      const successMessage = document.getElementById(successId);
+
+      // TODO: Replace with your actual backend endpoint
+      // For now, just show success message
+      console.log('Email submitted:', email);
+
+      // Show success message
+      successMessage.classList.add('show');
+      form.reset();
+
+      // Optional: Send to Google Sheets, Airtable, or your backend
+      // fetch('YOUR_BACKEND_URL', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ email })
+      // });
+
+      // Hide success message after 5 seconds
+      setTimeout(() => {
+        successMessage.classList.remove('show');
+      }, 5000);
+    }
+
+    document.getElementById('signup-form').addEventListener('submit', (e) => {
+      handleSubmit(e, 'signup-form', 'success-message');
+    });
+
+    document.getElementById('footer-signup-form').addEventListener('submit', (e) => {
+      handleSubmit(e, 'footer-signup-form', 'footer-success-message');
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
