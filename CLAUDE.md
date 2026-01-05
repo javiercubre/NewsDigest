@@ -4,14 +4,16 @@ This document provides comprehensive guidance for AI assistants (like Claude) wo
 
 ## Project Overview
 
-NewsDigest is an automated news aggregation service that scrapes headlines from multiple news sources and delivers them via email 4 times daily. The application runs on a scheduled basis via GitHub Actions and sends beautifully formatted HTML email digests.
+NewsDigest is an automated news aggregation service that scrapes headlines from multiple Portuguese and international news sources and delivers them via email 3 times daily. The application runs on a scheduled basis via GitHub Actions and sends beautifully formatted HTML email digests.
 
 **Key Features:**
-- Multi-source news scraping (Expresso, Público, ZeroZero, The Guardian)
-- NBA scores integration (morning digest only)
-- Priority-based article ranking
+- Multi-source news scraping (Expresso, Público, Observador, ZeroZero, The Guardian)
+- NBA scores integration with Player of the Night and Portuguese player (Neemias Queta) tracking
+- Article previews/summaries for all sources
+- Priority-based article ranking with game score formula for NBA
 - Automated email delivery with HTML/text formats
-- GitHub Actions scheduling (7 AM, 12 PM, 6 PM, 10 PM Portugal time)
+- GitHub Actions scheduling (6 AM, 12 PM, 6 PM Portugal time)
+- Landing page for product validation and email signup collection
 
 ## Codebase Structure
 
@@ -21,17 +23,26 @@ NewsDigest/
 │   ├── scrapers/
 │   │   ├── expresso.ts      # Expresso (PT news) scraper
 │   │   ├── publico.ts       # Público (PT news) scraper
+│   │   ├── observador.ts    # Observador (PT news) scraper
 │   │   ├── zerozero.ts      # ZeroZero (Sports) scraper
 │   │   ├── guardian.ts      # The Guardian (International) scraper
-│   │   ├── nba.ts           # NBA scores via ESPN API
+│   │   ├── nba.ts           # NBA scores via ESPN API with Player of Night
 │   │   └── index.ts         # Scraper exports
 │   ├── email.ts             # Email formatting & sending logic
 │   ├── types.ts             # TypeScript type definitions
 │   ├── utils.ts             # Text sanitization & priority calculation
 │   └── index.ts             # Main entry point & orchestration
+├── landing/                 # Landing page for product validation
+│   ├── index.html           # Main landing page (Portuguese)
+│   ├── api/signup.js        # Vercel serverless function for signups
+│   ├── vercel.json          # Vercel deployment configuration
+│   ├── package.json         # Landing page dependencies
+│   ├── GOOGLE_SHEETS_SETUP.md   # Guide for Google Sheets integration
+│   ├── QUICK_START.md       # Quick deployment guide
+│   └── DEPLOY_NOW.md        # Step-by-step deploy instructions
 ├── .github/
 │   └── workflows/
-│       └── digest.yml       # GitHub Actions workflow (4x daily schedule)
+│       └── digest.yml       # GitHub Actions workflow (3x daily schedule)
 ├── dist/                    # Compiled JavaScript (git-ignored)
 ├── package.json             # Dependencies & scripts
 ├── tsconfig.json            # TypeScript configuration
@@ -123,9 +134,36 @@ Two formats generated (`src/email.ts`):
 ```
 
 **Sections:**
-1. Top Headlines (2 per source, sorted by priority)
-2. NBA Scores (morning digest only, yesterday's completed games)
-3. Individual source sections (all articles)
+1. Top Headlines (2 per source, sorted by priority, with summaries)
+2. NBA Scores (morning digest only):
+   - Player of the Night (highest game score across all games)
+   - Portuguese Spotlight (Neemias Queta stats when he plays)
+   - Game scores with team leaders (PTS, REB, AST, STL, BLK, Game Score)
+3. Individual source sections (all articles with previews/summaries)
+
+### 5. NBA Integration Details
+
+The NBA module (`src/scrapers/nba.ts`) provides comprehensive game data:
+
+**Game Score Formula:**
+```typescript
+GameScore = PTS + 0.4*REB + 0.7*AST + 2*STL + 2*BLK
+```
+
+**Player of the Night:** Best performer across all games based on game score
+
+**Featured Player Tracking:** Automatic tracking of Neemias Queta (Portuguese NBA player)
+
+**Team Leaders:** For each game, displays:
+- Top scorer, rebounder, assists leader
+- Steals and blocks leaders (from box scores)
+- Best overall performer (highest game score)
+
+**Data Flow:**
+```
+ESPN Scoreboard API → Game summaries
+ESPN Box Score API → Detailed player stats → Calculate game scores → Find Player of Night
+```
 
 ## Development Workflows
 
@@ -168,10 +206,16 @@ Or via GitHub Actions: Manually trigger workflow with `force_nba: true`
 
 ### Deployment
 
-Changes are automatically deployed via GitHub Actions:
+**Email Digest (GitHub Actions):**
 - Push to main branch
-- Workflow runs on schedule (4 times daily)
+- Workflow runs on schedule (3 times daily: 6 AM, 12 PM, 6 PM Portugal time)
 - No manual deployment needed
+
+**Landing Page (Vercel):**
+- Located in `/landing` directory
+- Deployed separately to Vercel
+- Collects email signups via Google Sheets integration
+- See `landing/DEPLOY_NOW.md` for setup instructions
 
 ## Code Conventions & Patterns
 
@@ -357,9 +401,24 @@ export { scrapeExample } from './example';
 import { scrapeExample } from './scrapers';
 
 const scrapers = [
-  { name: 'Example News', fn: scrapeExample },
-  // ... existing scrapers
+  { name: 'Expresso', fn: scrapeExpresso },
+  { name: 'Público', fn: scrapePublico },
+  { name: 'Observador', fn: scrapeObservador },
+  { name: 'ZeroZero', fn: scrapeZeroZero },
+  { name: 'The Guardian', fn: scrapeGuardian },
+  { name: 'Example News', fn: scrapeExample },  // Add new scraper here
 ];
+```
+
+5. **Add source logo in email.ts:**
+```typescript
+const SOURCE_LOGOS: Record<string, { url: string; emoji: string }> = {
+  // ... existing sources
+  'Example News': {
+    url: 'https://www.google.com/s2/favicons?domain=example.com&sz=64',
+    emoji: '📰',
+  },
+};
 ```
 
 ### Scraper Debugging Tips
@@ -602,8 +661,22 @@ Before submitting PR:
 
 ## Version History & Recent Changes
 
-**Recent improvements:**
-- **NBA scores integration** (`src/scrapers/nba.ts`) - Uses ESPN JSON API, extracts top player stats
+**January 2026 Updates:**
+- **Observador scraper** (`src/scrapers/observador.ts`) - Added Portuguese news source Observador.pt
+- **Article previews/summaries** - All scrapers now extract article summaries when available
+- **Player of the Night** - NBA integration now calculates best performer using game score formula
+- **Neemias Queta tracking** - Automatic Portuguese player spotlight in NBA section
+- **Top game score per team** - Shows best performer for each team in every game
+- **Steals & blocks leaders** - From box score API for detailed defensive stats
+- **Landing page** (`/landing`) - Product validation page with email signup
+- **Google Sheets integration** - Landing page stores signups in Google Sheets
+- **Vercel deployment** - Landing page deployed on Vercel with serverless functions
+- **Source logos** - Using Google favicon service for reliable source icons
+- **Schedule update** - Changed from 4x to 3x daily (6 AM, 12 PM, 6 PM Portugal)
+- **UI/UX improvements** - Accessibility fixes for landing page
+
+**Previous improvements:**
+- **NBA scores integration** (`src/scrapers/nba.ts`) - Uses ESPN JSON API
 - **Top Headlines section** - Shows 2 best articles per source based on priority
 - **Guardian support** - International news coverage
 - **Priority algorithm** - Refined article ranking system
@@ -613,6 +686,7 @@ Before submitting PR:
 - Some Portuguese sites may block automated requests intermittently
 - NBA stats may be incomplete for games without full box scores
 - Email client compatibility varies (tested with Gmail, Outlook)
+- Observador.pt occasionally changes their HTML structure
 
 ## Additional Resources
 
@@ -632,7 +706,38 @@ When you need clarification:
 4. **Check GitHub Actions logs** - Production errors logged there
 5. **Ask specific questions** - Include file paths, line numbers, error messages
 
+## Landing Page Development
+
+The landing page (`/landing`) is a separate Vercel-deployed site for product validation:
+
+### Structure
+- **index.html** - Single-page marketing site in Portuguese
+- **api/signup.js** - Serverless function for email collection
+- **vercel.json** - Routes and deployment config
+
+### Features
+- Email signup forms (hero + footer)
+- Source suggestion form (users can request new sources)
+- Pricing tiers display (Free, Premium €9/mo, Lifetime €99)
+- FAQ section
+- Responsive design
+- Accessibility features (ARIA labels, focus states)
+
+### Deployment
+1. Deploy to Vercel: `cd landing && vercel`
+2. Set environment variables in Vercel dashboard:
+   - `GOOGLE_SHEETS_PRIVATE_KEY` - Service account key
+   - `GOOGLE_SHEETS_CLIENT_EMAIL` - Service account email
+   - `GOOGLE_SHEETS_SPREADSHEET_ID` - Target spreadsheet ID
+3. See `landing/GOOGLE_SHEETS_SETUP.md` for detailed setup
+
+### Testing Landing Page Locally
+```bash
+cd landing
+npx serve .  # Serves index.html on localhost:3000
+```
+
 ---
 
-**Last updated:** January 2, 2026
+**Last updated:** January 5, 2026
 **Maintained for:** Claude and other AI assistants working on this codebase
