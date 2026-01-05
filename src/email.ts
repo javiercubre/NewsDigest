@@ -13,6 +13,10 @@ const SOURCE_LOGOS: Record<string, { url: string; emoji: string }> = {
     url: 'https://www.google.com/s2/favicons?domain=publico.pt&sz=64',
     emoji: '📰',
   },
+  'Observador': {
+    url: 'https://www.google.com/s2/favicons?domain=observador.pt&sz=64',
+    emoji: '📰',
+  },
   'ZeroZero': {
     url: 'https://www.google.com/s2/favicons?domain=zerozero.pt&sz=64',
     emoji: '⚽',
@@ -526,8 +530,8 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
 
   html += `
     <div class="footer">
-      <p>Este digest é gerado automaticamente 3 vezes por dia.</p>
-      <p>Fontes: Expresso, Público, ZeroZero, The Guardian</p>
+      <p>Este digest é gerado automaticamente 4 vezes por dia.</p>
+      <p>Fontes: Expresso, Público, Observador, ZeroZero, The Guardian</p>
     </div>
   </div>
 </body>
@@ -630,7 +634,8 @@ function formatDigestText(digests: SourceDigest[], nbaScores?: NBAScores): strin
   }
 
   text += `\n${'='.repeat(50)}\n`;
-  text += `Este digest é gerado automaticamente 3 vezes por dia.\n`;
+  text += `Este digest é gerado automaticamente 4 vezes por dia.\n`;
+  text += `Fontes: Expresso, Público, Observador, ZeroZero, The Guardian\n`;
 
   return text;
 }
