@@ -87,6 +87,8 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
   });
 
   const topHeadlines = getTopHeadlines(digests, 2); // 2 per source
+  const totalArticles = digests.reduce((acc, d) => acc + d.articles.length, 0);
+  const sourcesCount = digests.filter(d => d.articles.length > 0).length;
 
   let html = `
 <!DOCTYPE html>
@@ -94,358 +96,212 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>News Digest</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f5f5f5;
-    }
-    .container {
-      background-color: #ffffff;
-      border-radius: 8px;
-      padding: 30px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .header {
-      text-align: center;
-      border-bottom: 2px solid #e0e0e0;
-      padding-bottom: 20px;
-      margin-bottom: 30px;
-    }
-    .header h1 {
-      color: #1a1a1a;
-      margin: 0 0 10px 0;
-      font-size: 28px;
-    }
-    .header .date {
-      color: #666;
-      font-size: 14px;
-    }
-    .top-headlines {
-      background-color: #fff8e1;
-      border: 2px solid #ffc107;
-      border-radius: 12px;
-      padding: 25px;
-      margin-bottom: 35px;
-    }
-    .top-headlines h2 {
-      margin: 0 0 20px 0;
-      font-size: 22px;
-      color: #e65100;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .top-headline-item {
-      padding: 15px 0;
-      border-bottom: 1px solid #ffe082;
-    }
-    .top-headline-item:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-    .top-headline-item h3 {
-      margin: 0 0 8px 0;
-      font-size: 18px;
-      font-weight: 600;
-    }
-    .top-headline-item h3 a {
-      color: #1a1a1a;
-      text-decoration: none;
-    }
-    .top-headline-item h3 a:hover {
-      color: #e65100;
-      text-decoration: underline;
-    }
-    .top-headline-meta {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 13px;
-    }
-    .top-headline-source {
-      background-color: #e65100;
-      color: #ffffff;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-weight: 500;
-    }
-    .top-headline-summary {
-      color: #5d4037;
-      font-size: 14px;
-      margin-top: 8px;
-    }
-    .priority-badge {
-      background-color: #ffcc80;
-      color: #5d4037;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 11px;
-    }
-    .nba-section {
-      background-color: #e3f2fd;
-      border: 2px solid #1976d2;
-      border-radius: 12px;
-      padding: 25px;
-      margin-bottom: 35px;
-    }
-    .nba-section h2 {
-      margin: 0 0 20px 0;
-      font-size: 22px;
-      color: #1565c0;
-    }
-    .nba-game {
-      padding: 12px 0;
-      border-bottom: 1px solid #90caf9;
-    }
-    .nba-game:last-child {
-      border-bottom: none;
-    }
-    .nba-score {
-      font-size: 16px;
-      font-weight: 600;
-      color: #1a1a1a;
-      margin-bottom: 5px;
-    }
-    .nba-winner {
-      color: #1565c0;
-    }
-    .nba-stats {
-      margin-top: 8px;
-      padding-left: 10px;
-      border-left: 3px solid #90caf9;
-    }
-    .nba-stat {
-      font-size: 13px;
-      color: #5d4037;
-      margin: 3px 0;
-    }
-    .player-of-night {
-      background: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%);
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
-    }
-    .player-of-night h3 {
-      margin: 0 0 10px 0;
-      font-size: 14px;
-      color: #8b6914;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .player-of-night .player-name {
-      font-size: 22px;
-      font-weight: 700;
-      color: #1a1a1a;
-      margin: 0 0 5px 0;
-    }
-    .player-of-night .player-team {
-      font-size: 14px;
-      color: #5d4037;
-      margin: 0 0 12px 0;
-    }
-    .player-of-night .statline {
-      font-size: 18px;
-      font-weight: 600;
-      color: #1a1a1a;
-      margin: 0 0 8px 0;
-    }
-    .player-of-night .game-score {
-      font-size: 12px;
-      color: #8b6914;
-    }
-    .featured-player {
-      background: linear-gradient(135deg, #006600 0%, #009900 100%);
-      border-radius: 10px;
-      padding: 15px 20px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    .featured-player .flag {
-      font-size: 32px;
-    }
-    .featured-player .player-info {
-      flex-grow: 1;
-    }
-    .featured-player h3 {
-      margin: 0 0 5px 0;
-      font-size: 12px;
-      color: rgba(255,255,255,0.8);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .featured-player .player-name {
-      font-size: 18px;
-      font-weight: 700;
-      color: #ffffff;
-      margin: 0 0 3px 0;
-    }
-    .featured-player .player-team {
-      font-size: 13px;
-      color: rgba(255,255,255,0.9);
-      margin: 0 0 8px 0;
-    }
-    .featured-player .statline {
-      font-size: 14px;
-      font-weight: 600;
-      color: #ffffff;
-      margin: 0;
-    }
-    .featured-player .dnp {
-      font-size: 14px;
-      color: rgba(255,255,255,0.7);
-      font-style: italic;
-    }
-    .source-section {
-      margin-bottom: 35px;
-    }
-    .source-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #e0e0e0;
-    }
-    .source-logo {
-      width: 28px;
-      height: 28px;
-      margin-right: 10px;
-      object-fit: contain;
-      border-radius: 4px;
-    }
-    .source-header h2 {
-      margin: 0;
-      font-size: 20px;
-      color: #2c3e50;
-      flex-grow: 1;
-    }
-    .source-header a {
-      color: #3498db;
-      text-decoration: none;
-      font-size: 14px;
-      margin-left: 10px;
-    }
-    .source-header a:hover {
-      text-decoration: underline;
-    }
-    .article {
-      margin-bottom: 15px;
-      padding: 12px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .article:last-child {
-      border-bottom: none;
-    }
-    .article-title {
-      margin: 0 0 5px 0;
-      font-size: 16px;
-    }
-    .article-title a {
-      color: #1a1a1a;
-      text-decoration: none;
-    }
-    .article-title a:hover {
-      color: #3498db;
-      text-decoration: underline;
-    }
-    .article-summary {
-      color: #666;
-      font-size: 14px;
-      margin: 5px 0 0 0;
-    }
-    .article-category {
-      display: inline-block;
-      background-color: #e8f4fc;
-      color: #2980b9;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      margin-top: 5px;
-    }
-    .error {
-      color: #e74c3c;
-      font-style: italic;
-      padding: 10px;
-      background-color: #fdf2f2;
-      border-radius: 4px;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #e0e0e0;
-      color: #999;
-      font-size: 12px;
-    }
-    .no-articles {
-      color: #999;
-      font-style: italic;
-    }
-  </style>
+  <title>NewsDigest - O seu resumo diário de notícias</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>📰 News Digest</h1>
-      <p class="date">${formattedDate} às ${formattedTime}</p>
-    </div>
-`;
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1a1a2e; background-color: #f0f2f5;">
+
+  <!-- Wrapper Table -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0f2f5;">
+    <tr>
+      <td align="center" style="padding: 20px 10px;">
+
+        <!-- Main Container -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 680px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+
+          <!-- Premium Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding: 40px 30px 30px 30px; text-align: center;">
+                    <!-- Logo/Brand -->
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%); width: 56px; height: 56px; border-radius: 14px; text-align: center; vertical-align: middle;">
+                          <span style="font-size: 28px; line-height: 56px;">📰</span>
+                        </td>
+                      </tr>
+                    </table>
+                    <h1 style="color: #ffffff; font-size: 32px; font-weight: 700; margin: 20px 0 8px 0; letter-spacing: -0.5px;">NewsDigest</h1>
+                    <p style="color: #a0aec0; font-size: 15px; margin: 0 0 20px 0; font-weight: 400;">As notícias que importam, curadas para si</p>
+
+                    <!-- Date Badge -->
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                      <tr>
+                        <td style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 8px 20px;">
+                          <span style="color: #e2e8f0; font-size: 14px;">${formattedDate} • ${formattedTime}</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Stats Bar -->
+                <tr>
+                  <td style="background: rgba(0,0,0,0.2); padding: 16px 30px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td width="33%" style="text-align: center;">
+                          <span style="color: #e94560; font-size: 24px; font-weight: 700; display: block;">${totalArticles}</span>
+                          <span style="color: #a0aec0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Artigos</span>
+                        </td>
+                        <td width="34%" style="text-align: center; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
+                          <span style="color: #e94560; font-size: 24px; font-weight: 700; display: block;">${sourcesCount}</span>
+                          <span style="color: #a0aec0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Fontes</span>
+                        </td>
+                        <td width="33%" style="text-align: center;">
+                          <span style="color: #e94560; font-size: 24px; font-weight: 700; display: block;">${topHeadlines.length}</span>
+                          <span style="color: #a0aec0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Destaques</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Content Area -->
+          <tr>
+            <td style="padding: 0 30px 30px 30px;">`;
 
   // Top Headlines Section
   if (topHeadlines.length > 0) {
     html += `
-    <div class="top-headlines">
-      <h2>⭐ Top Headlines</h2>
+              <!-- Top Headlines Section -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 30px;">
+                <tr>
+                  <td>
+                    <!-- Section Header -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                      <tr>
+                        <td>
+                          <table role="presentation" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td style="background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%); width: 4px; border-radius: 2px;">&nbsp;</td>
+                              <td style="padding-left: 12px;">
+                                <span style="font-size: 11px; font-weight: 600; color: #e94560; text-transform: uppercase; letter-spacing: 1.5px;">Em Destaque</span>
+                                <h2 style="margin: 4px 0 0 0; font-size: 22px; font-weight: 700; color: #1a1a2e;">Principais Notícias</h2>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
 `;
     for (const article of topHeadlines) {
       const sourceLogo = SOURCE_LOGOS[article.source || ''];
-      const sourceLogoHtml = sourceLogo
-        ? `<img src="${escapeHtml(sourceLogo.url)}" alt="" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;border-radius:2px;" onerror="this.style.display='none'">`
-        : '';
+      const sourceEmoji = sourceLogo?.emoji || '📰';
+      const priorityColor = article.priority >= 8 ? '#e94560' : article.priority >= 6 ? '#f39c12' : '#3498db';
 
       html += `
-      <div class="top-headline-item">
-        <h3><a href="${escapeHtml(article.url)}" target="_blank">${escapeHtml(article.title)}</a></h3>
-        <div class="top-headline-meta">
-          <span class="top-headline-source">${sourceLogoHtml}${escapeHtml(article.source || '')}</span>
-          <span class="priority-badge">Priority: ${article.priority}/10</span>
-        </div>
+                    <!-- Headline Card -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 16px;">
+                      <tr>
+                        <td style="background: #f8fafc; border-radius: 12px; border-left: 4px solid ${priorityColor}; padding: 20px;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td>
+                                <!-- Source Tag -->
+                                <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
+                                  <tr>
+                                    <td style="background: #1a1a2e; border-radius: 6px; padding: 4px 12px;">
+                                      <span style="color: #ffffff; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">${sourceEmoji} ${escapeHtml(article.source || '')}</span>
+                                    </td>
+                                    <td style="padding-left: 10px;">
+                                      <span style="background: ${priorityColor}20; color: ${priorityColor}; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 4px;">★ ${article.priority}/10</span>
+                                    </td>
+                                  </tr>
+                                </table>
+                                <!-- Title -->
+                                <a href="${escapeHtml(article.url)}" target="_blank" style="color: #1a1a2e; text-decoration: none; font-size: 17px; font-weight: 600; line-height: 1.4; display: block;">${escapeHtml(article.title)}</a>
 `;
       if (article.summary) {
-        html += `        <p class="top-headline-summary">${escapeHtml(article.summary)}</p>\n`;
+        html += `                                <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin: 10px 0 0 0;">${escapeHtml(article.summary)}</p>\n`;
       }
-      html += `      </div>\n`;
+      html += `
+                                <!-- Read More Link -->
+                                <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top: 12px;">
+                                  <tr>
+                                    <td>
+                                      <a href="${escapeHtml(article.url)}" target="_blank" style="color: #e94560; font-size: 13px; font-weight: 600; text-decoration: none;">Ler artigo →</a>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+`;
     }
-    html += `    </div>\n`;
+    html += `                  </td>
+                </tr>
+              </table>
+`;
   }
 
   // NBA Scores Section (morning digest only)
   if (nbaScores && nbaScores.games.length > 0) {
     html += `
-    <div class="nba-section">
-      <h2>🏀 NBA Scores - ${escapeHtml(nbaScores.date)}</h2>
+              <!-- NBA Section -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 35px;">
+                <tr>
+                  <td>
+                    <!-- Section Header -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                      <tr>
+                        <td>
+                          <table role="presentation" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); width: 4px; border-radius: 2px;">&nbsp;</td>
+                              <td style="padding-left: 12px;">
+                                <span style="font-size: 11px; font-weight: 600; color: #f97316; text-transform: uppercase; letter-spacing: 1.5px;">NBA</span>
+                                <h2 style="margin: 4px 0 0 0; font-size: 22px; font-weight: 700; color: #1a1a2e;">Resultados - ${escapeHtml(nbaScores.date)}</h2>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
 `;
 
     // Player of the Night
     if (nbaScores.playerOfTheNight) {
       const potn = nbaScores.playerOfTheNight;
       html += `
-      <div class="player-of-night">
-        <h3>⭐ Player of the Night</h3>
-        <p class="player-name">${escapeHtml(potn.name)}</p>
-        <p class="player-team">${escapeHtml(potn.team)} • ${escapeHtml(potn.matchup)}</p>
-        <p class="statline">${potn.points} PTS | ${potn.rebounds} REB | ${potn.assists} AST | ${potn.steals} STL | ${potn.blocks} BLK</p>
-        <p class="game-score">Game Score: ${potn.gameScore}</p>
-      </div>
+                    <!-- Player of the Night -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 16px; padding: 24px; text-align: center;">
+                          <span style="display: inline-block; background: rgba(0,0,0,0.15); border-radius: 20px; padding: 4px 14px; font-size: 11px; font-weight: 700; color: #78350f; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">⭐ Jogador da Noite</span>
+                          <h3 style="margin: 0 0 6px 0; font-size: 26px; font-weight: 700; color: #1a1a2e;">${escapeHtml(potn.name)}</h3>
+                          <p style="margin: 0 0 16px 0; font-size: 14px; color: #78350f;">${escapeHtml(potn.team)} • ${escapeHtml(potn.matchup)}</p>
+                          <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                            <tr>
+                              <td style="background: rgba(0,0,0,0.1); border-radius: 8px; padding: 12px 20px;">
+                                <span style="font-size: 18px; font-weight: 700; color: #1a1a2e;">${potn.points} PTS</span>
+                                <span style="color: #78350f; margin: 0 8px;">|</span>
+                                <span style="font-size: 18px; font-weight: 700; color: #1a1a2e;">${potn.rebounds} REB</span>
+                                <span style="color: #78350f; margin: 0 8px;">|</span>
+                                <span style="font-size: 18px; font-weight: 700; color: #1a1a2e;">${potn.assists} AST</span>
+                              </td>
+                            </tr>
+                          </table>
+                          <p style="margin: 12px 0 0 0; font-size: 12px; color: #92400e;">Game Score: <strong>${potn.gameScore}</strong></p>
+                        </td>
+                      </tr>
+                    </table>
 `;
     }
 
@@ -453,89 +309,246 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
     if (nbaScores.neemiasQueta) {
       const nq = nbaScores.neemiasQueta;
       html += `
-      <div class="featured-player">
-        <span class="flag">🇵🇹</span>
-        <div class="player-info">
-          <h3>Portuguese Spotlight</h3>
-          <p class="player-name">${escapeHtml(nq.name)}</p>
-          <p class="player-team">${escapeHtml(nq.team)} • ${escapeHtml(nq.matchup)}</p>
-          ${nq.didPlay
-            ? `<p class="statline">${nq.minutes} MIN | ${nq.points} PTS | ${nq.rebounds} REB | ${nq.assists} AST | ${nq.steals} STL | ${nq.blocks} BLK</p>`
-            : `<p class="dnp">Did not play</p>`
-          }
-        </div>
-      </div>
+                    <!-- Portuguese Spotlight -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #006600 0%, #008800 100%); border-radius: 12px; padding: 18px 20px;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td width="50" style="vertical-align: top;">
+                                <span style="font-size: 36px;">🇵🇹</span>
+                              </td>
+                              <td style="padding-left: 12px;">
+                                <span style="display: block; font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Destaque Português</span>
+                                <span style="display: block; font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 2px;">${escapeHtml(nq.name)}</span>
+                                <span style="display: block; font-size: 13px; color: rgba(255,255,255,0.85); margin-bottom: 10px;">${escapeHtml(nq.team)} • ${escapeHtml(nq.matchup)}</span>
+                                ${nq.didPlay
+                                  ? `<span style="display: block; font-size: 14px; font-weight: 600; color: #ffffff;">${nq.minutes} MIN | ${nq.points} PTS | ${nq.rebounds} REB | ${nq.assists} AST</span>`
+                                  : `<span style="display: block; font-size: 14px; color: rgba(255,255,255,0.6); font-style: italic;">Não jogou</span>`
+                                }
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
 `;
     }
 
+    // Games
     for (const game of nbaScores.games) {
-      const winnerClass = game.winner === 'home' ? 'home' : 'away';
+      const awayWon = game.winner === 'away';
+      const homeWon = game.winner === 'home';
       html += `
-      <div class="nba-game">
-        <div class="nba-score">
-          <span class="${game.winner === 'away' ? 'nba-winner' : ''}">${escapeHtml(game.awayTeam)} ${game.awayScore}</span>
-          <span> @ </span>
-          <span class="${game.winner === 'home' ? 'nba-winner' : ''}">${escapeHtml(game.homeTeam)} ${game.homeScore}</span>
-        </div>
-        <div class="nba-stats">
-          <div class="nba-stat"><strong>${escapeHtml(game.awayTeam)}:</strong> ${escapeHtml(game.awayTopScorer.name)} (${escapeHtml(game.awayTopScorer.value)}) | ${escapeHtml(game.awayTopRebounder.name)} (${escapeHtml(game.awayTopRebounder.value)}) | ${escapeHtml(game.awayTopAssists.name)} (${escapeHtml(game.awayTopAssists.value)}) | ${escapeHtml(game.awayTopSteals.name)} (${escapeHtml(game.awayTopSteals.value)}) | ${escapeHtml(game.awayTopBlocks.name)} (${escapeHtml(game.awayTopBlocks.value)})</div>
-          <div class="nba-stat"><strong>Best:</strong> ${escapeHtml(game.awayTopGameScore.name)} (${escapeHtml(game.awayTopGameScore.value)})</div>
-          <div class="nba-stat"><strong>${escapeHtml(game.homeTeam)}:</strong> ${escapeHtml(game.homeTopScorer.name)} (${escapeHtml(game.homeTopScorer.value)}) | ${escapeHtml(game.homeTopRebounder.name)} (${escapeHtml(game.homeTopRebounder.value)}) | ${escapeHtml(game.homeTopAssists.name)} (${escapeHtml(game.homeTopAssists.value)}) | ${escapeHtml(game.homeTopSteals.name)} (${escapeHtml(game.homeTopSteals.value)}) | ${escapeHtml(game.homeTopBlocks.name)} (${escapeHtml(game.homeTopBlocks.value)})</div>
-          <div class="nba-stat"><strong>Best:</strong> ${escapeHtml(game.homeTopGameScore.name)} (${escapeHtml(game.homeTopGameScore.value)})</div>
-        </div>
-      </div>
+                    <!-- Game Card -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
+                      <tr>
+                        <td style="background: #f8fafc; border-radius: 10px; padding: 16px;">
+                          <!-- Score -->
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td width="45%" style="text-align: right;">
+                                <span style="font-size: 15px; font-weight: ${awayWon ? '700' : '500'}; color: ${awayWon ? '#1a1a2e' : '#64748b'};">${escapeHtml(game.awayTeam)}</span>
+                              </td>
+                              <td width="10%" style="text-align: center;">
+                                <span style="font-size: 18px; font-weight: 700; color: #1a1a2e; background: ${awayWon ? '#e94560' : '#e2e8f0'}; color: ${awayWon ? '#fff' : '#1a1a2e'}; padding: 4px 8px; border-radius: 4px; margin-right: 4px;">${game.awayScore}</span>
+                                <span style="color: #94a3b8; font-size: 12px;">-</span>
+                                <span style="font-size: 18px; font-weight: 700; background: ${homeWon ? '#e94560' : '#e2e8f0'}; color: ${homeWon ? '#fff' : '#1a1a2e'}; padding: 4px 8px; border-radius: 4px; margin-left: 4px;">${game.homeScore}</span>
+                              </td>
+                              <td width="45%" style="text-align: left;">
+                                <span style="font-size: 15px; font-weight: ${homeWon ? '700' : '500'}; color: ${homeWon ? '#1a1a2e' : '#64748b'};">${escapeHtml(game.homeTeam)}</span>
+                              </td>
+                            </tr>
+                          </table>
+                          <!-- Top Performers -->
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+                            <tr>
+                              <td style="font-size: 12px; color: #64748b;">
+                                <strong style="color: #1a1a2e;">MVP:</strong> ${escapeHtml(game.awayTopGameScore.name)} (${escapeHtml(game.awayTopGameScore.value)}) vs ${escapeHtml(game.homeTopGameScore.name)} (${escapeHtml(game.homeTopGameScore.value)})
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
 `;
     }
-    html += `    </div>\n`;
+    html += `                  </td>
+                </tr>
+              </table>
+`;
   }
 
   // Individual source sections
+  const sourceColors: Record<string, string> = {
+    'Expresso': '#c70000',
+    'Público': '#1a1a1a',
+    'Observador': '#e31937',
+    'ZeroZero': '#00a651',
+    'The Guardian': '#052962',
+  };
+
   for (const digest of digests) {
     const logo = SOURCE_LOGOS[digest.source];
-    const logoHtml = logo
-      ? `<img src="${escapeHtml(logo.url)}" alt="${escapeHtml(digest.source)}" class="source-logo" onerror="this.style.display='none'">`
-      : '';
+    const sourceColor = sourceColors[digest.source] || '#1a1a2e';
+    const sourceEmoji = logo?.emoji || '📰';
 
     html += `
-    <div class="source-section">
-      <div class="source-header">
-        ${logoHtml}
-        <h2>${escapeHtml(digest.source)}</h2>
-        <a href="${escapeHtml(digest.sourceUrl)}" target="_blank">Ver site →</a>
-      </div>
+              <!-- ${digest.source} Section -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 35px;">
+                <tr>
+                  <td>
+                    <!-- Source Header -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 16px;">
+                      <tr>
+                        <td>
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td style="background: ${sourceColor}; width: 4px; border-radius: 2px;">&nbsp;</td>
+                              <td style="padding-left: 12px; vertical-align: middle;">
+                                <table role="presentation" cellpadding="0" cellspacing="0">
+                                  <tr>
+                                    <td style="vertical-align: middle;">
+                                      <span style="font-size: 20px; margin-right: 8px;">${sourceEmoji}</span>
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                      <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: #1a1a2e;">${escapeHtml(digest.source)}</h2>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td style="text-align: right; vertical-align: middle;">
+                                <a href="${escapeHtml(digest.sourceUrl)}" target="_blank" style="color: ${sourceColor}; font-size: 13px; font-weight: 500; text-decoration: none;">Ver fonte →</a>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
 `;
 
     if (digest.error) {
-      html += `      <p class="error">⚠️ Erro ao carregar: ${escapeHtml(digest.error)}</p>\n`;
+      html += `
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="background: #fef2f2; border-radius: 8px; padding: 16px; border-left: 4px solid #ef4444;">
+                          <span style="color: #b91c1c; font-size: 14px;">⚠️ Erro ao carregar: ${escapeHtml(digest.error)}</span>
+                        </td>
+                      </tr>
+                    </table>
+`;
     } else if (digest.articles.length === 0) {
-      html += `      <p class="no-articles">Nenhum artigo encontrado</p>\n`;
+      html += `
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="background: #f8fafc; border-radius: 8px; padding: 16px; text-align: center;">
+                          <span style="color: #94a3b8; font-size: 14px; font-style: italic;">Nenhum artigo encontrado</span>
+                        </td>
+                      </tr>
+                    </table>
+`;
     } else {
-      for (const article of digest.articles) {
+      html += `
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+`;
+      for (let i = 0; i < digest.articles.length; i++) {
+        const article = digest.articles[i];
+        const isLast = i === digest.articles.length - 1;
         html += `
-      <div class="article">
-        <h3 class="article-title">
-          <a href="${escapeHtml(article.url)}" target="_blank">${escapeHtml(article.title)}</a>
-        </h3>
+                      <tr>
+                        <td style="padding: 14px 0; ${!isLast ? 'border-bottom: 1px solid #f1f5f9;' : ''}">
+                          <a href="${escapeHtml(article.url)}" target="_blank" style="color: #1a1a2e; text-decoration: none; font-size: 15px; font-weight: 500; line-height: 1.4; display: block;">${escapeHtml(article.title)}</a>
 `;
         if (article.summary) {
-          html += `        <p class="article-summary">${escapeHtml(article.summary)}</p>\n`;
+          html += `                          <p style="color: #64748b; font-size: 13px; line-height: 1.5; margin: 6px 0 0 0;">${escapeHtml(article.summary)}</p>\n`;
         }
         if (article.category) {
-          html += `        <span class="article-category">${escapeHtml(article.category)}</span>\n`;
+          html += `                          <span style="display: inline-block; background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; margin-top: 8px;">${escapeHtml(article.category)}</span>\n`;
         }
-        html += `      </div>\n`;
+        html += `                        </td>
+                      </tr>
+`;
       }
+      html += `                    </table>
+`;
     }
 
-    html += `    </div>\n`;
+    html += `                  </td>
+                </tr>
+              </table>
+`;
   }
 
+  // Footer
+  const sourceNames = digests.map(d => d.source).join(' • ');
   html += `
-    <div class="footer">
-      <p>Este digest é gerado automaticamente 4 vezes por dia.</p>
-      <p>Fontes: Expresso, Público, Observador, ZeroZero, The Guardian</p>
-    </div>
-  </div>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 30px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-top: 1px solid #e2e8f0; height: 1px;"></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px; background: #f8fafc;">
+              <!-- Share CTA -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td style="text-align: center;">
+                    <p style="margin: 0 0 12px 0; font-size: 15px; font-weight: 600; color: #1a1a2e;">Gostou deste digest?</p>
+                    <p style="margin: 0 0 16px 0; font-size: 13px; color: #64748b;">Partilhe com amigos e colegas que também querem estar informados.</p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Source Attribution -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                <tr>
+                  <td style="text-align: center;">
+                    <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Fontes</span>
+                    <p style="margin: 6px 0 0 0; font-size: 12px; color: #64748b;">${escapeHtml(sourceNames)}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Brand Footer -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="text-align: center;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto 12px auto;">
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%); width: 32px; height: 32px; border-radius: 8px; text-align: center; vertical-align: middle;">
+                          <span style="font-size: 16px; line-height: 32px;">📰</span>
+                        </td>
+                      </tr>
+                    </table>
+                    <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1a1a2e;">NewsDigest</p>
+                    <p style="margin: 0; font-size: 12px; color: #94a3b8;">As notícias que importam, 3x por dia</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Copyright -->
+          <tr>
+            <td style="background: #1a1a2e; padding: 16px 30px; text-align: center;">
+              <p style="margin: 0; font-size: 11px; color: #64748b;">© ${new Date().getFullYear()} NewsDigest. Feito com ❤️ em Portugal.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
 `;
@@ -557,89 +570,106 @@ function formatDigestText(digests: SourceDigest[], nbaScores?: NBAScores): strin
   });
 
   const topHeadlines = getTopHeadlines(digests, 2); // 2 per source
+  const totalArticles = digests.reduce((acc, d) => acc + d.articles.length, 0);
+  const sourcesCount = digests.filter(d => d.articles.length > 0).length;
 
-  let text = `📰 NEWS DIGEST\n`;
-  text += `${formattedDate} às ${formattedTime}\n`;
-  text += `${'='.repeat(50)}\n\n`;
+  let text = `\n`;
+  text += `╔══════════════════════════════════════════════════╗\n`;
+  text += `║           📰 NEWSDIGEST                          ║\n`;
+  text += `║     As notícias que importam, curadas para si    ║\n`;
+  text += `╚══════════════════════════════════════════════════╝\n\n`;
+  text += `📅 ${formattedDate} às ${formattedTime}\n`;
+  text += `📊 ${totalArticles} artigos | ${sourcesCount} fontes | ${topHeadlines.length} destaques\n`;
+  text += `${'─'.repeat(50)}\n\n`;
 
   // Top Headlines
   if (topHeadlines.length > 0) {
-    text += `⭐ TOP HEADLINES\n`;
-    text += `${'─'.repeat(40)}\n`;
+    text += `┌──────────────────────────────────────────────────┐\n`;
+    text += `│  ⭐ PRINCIPAIS NOTÍCIAS                          │\n`;
+    text += `└──────────────────────────────────────────────────┘\n`;
     for (const article of topHeadlines) {
-      text += `\n★ ${article.title}\n`;
-      text += `  [${article.source}] Priority: ${article.priority}/10\n`;
-      text += `  ${article.url}\n`;
+      text += `\n  ★ ${article.title}\n`;
+      text += `    └─ [${article.source}] Prioridade: ${article.priority}/10\n`;
+      text += `    └─ ${article.url}\n`;
+      if (article.summary) {
+        text += `    └─ ${article.summary}\n`;
+      }
     }
-    text += `\n${'='.repeat(50)}\n`;
+    text += `\n${'─'.repeat(50)}\n`;
   }
 
   // NBA Scores (morning digest only)
   if (nbaScores && nbaScores.games.length > 0) {
-    text += `\n🏀 NBA SCORES - ${nbaScores.date}\n`;
-    text += `${'─'.repeat(40)}\n`;
+    text += `\n┌──────────────────────────────────────────────────┐\n`;
+    text += `│  🏀 NBA RESULTADOS - ${nbaScores.date.padEnd(25)}│\n`;
+    text += `└──────────────────────────────────────────────────┘\n`;
 
     // Player of the Night
     if (nbaScores.playerOfTheNight) {
       const potn = nbaScores.playerOfTheNight;
-      text += `\n⭐ PLAYER OF THE NIGHT\n`;
-      text += `${potn.name} (${potn.team})\n`;
-      text += `${potn.matchup}\n`;
-      text += `${potn.points} PTS | ${potn.rebounds} REB | ${potn.assists} AST | ${potn.steals} STL | ${potn.blocks} BLK\n`;
-      text += `Game Score: ${potn.gameScore}\n`;
-      text += `${'─'.repeat(40)}\n`;
+      text += `\n  ⭐ JOGADOR DA NOITE\n`;
+      text += `  ━━━━━━━━━━━━━━━━━━━\n`;
+      text += `  ${potn.name} (${potn.team})\n`;
+      text += `  ${potn.matchup}\n`;
+      text += `  📊 ${potn.points} PTS | ${potn.rebounds} REB | ${potn.assists} AST\n`;
+      text += `  Game Score: ${potn.gameScore}\n`;
     }
 
     // Neemias Queta (Portuguese player spotlight)
     if (nbaScores.neemiasQueta) {
       const nq = nbaScores.neemiasQueta;
-      text += `\n🇵🇹 PORTUGUESE SPOTLIGHT\n`;
-      text += `${nq.name} (${nq.team})\n`;
-      text += `${nq.matchup}\n`;
+      text += `\n  🇵🇹 DESTAQUE PORTUGUÊS\n`;
+      text += `  ━━━━━━━━━━━━━━━━━━━━━━\n`;
+      text += `  ${nq.name} (${nq.team})\n`;
+      text += `  ${nq.matchup}\n`;
       if (nq.didPlay) {
-        text += `${nq.minutes} MIN | ${nq.points} PTS | ${nq.rebounds} REB | ${nq.assists} AST | ${nq.steals} STL | ${nq.blocks} BLK\n`;
+        text += `  📊 ${nq.minutes} MIN | ${nq.points} PTS | ${nq.rebounds} REB | ${nq.assists} AST\n`;
       } else {
-        text += `Did not play\n`;
+        text += `  Não jogou\n`;
       }
-      text += `${'─'.repeat(40)}\n`;
     }
 
+    text += `\n  JOGOS:\n`;
     for (const game of nbaScores.games) {
       const winner = game.winner === 'home' ? game.homeTeam : game.awayTeam;
-      text += `\n${game.awayTeam} ${game.awayScore} @ ${game.homeTeam} ${game.homeScore}`;
-      text += ` (W: ${winner})\n`;
-      text += `  ${game.awayTeam}: ${game.awayTopScorer.name} (${game.awayTopScorer.value}) | ${game.awayTopRebounder.name} (${game.awayTopRebounder.value}) | ${game.awayTopAssists.name} (${game.awayTopAssists.value}) | ${game.awayTopSteals.name} (${game.awayTopSteals.value}) | ${game.awayTopBlocks.name} (${game.awayTopBlocks.value})\n`;
-      text += `  Best: ${game.awayTopGameScore.name} (${game.awayTopGameScore.value})\n`;
-      text += `  ${game.homeTeam}: ${game.homeTopScorer.name} (${game.homeTopScorer.value}) | ${game.homeTopRebounder.name} (${game.homeTopRebounder.value}) | ${game.homeTopAssists.name} (${game.homeTopAssists.value}) | ${game.homeTopSteals.name} (${game.homeTopSteals.value}) | ${game.homeTopBlocks.name} (${game.homeTopBlocks.value})\n`;
-      text += `  Best: ${game.homeTopGameScore.name} (${game.homeTopGameScore.value})\n`;
+      text += `\n  ${game.awayTeam} ${game.awayScore} @ ${game.homeTeam} ${game.homeScore}`;
+      text += ` (V: ${winner})\n`;
+      text += `    MVP: ${game.awayTopGameScore.name} (${game.awayTopGameScore.value}) vs ${game.homeTopGameScore.name} (${game.homeTopGameScore.value})\n`;
     }
-    text += `\n${'='.repeat(50)}\n`;
+    text += `\n${'─'.repeat(50)}\n`;
   }
 
   for (const digest of digests) {
     const sourceEmoji = SOURCE_LOGOS[digest.source]?.emoji || '📰';
-    text += `\n${sourceEmoji} ${digest.source.toUpperCase()}\n`;
-    text += `${'-'.repeat(40)}\n`;
+    text += `\n┌──────────────────────────────────────────────────┐\n`;
+    text += `│  ${sourceEmoji} ${digest.source.toUpperCase().padEnd(43)}│\n`;
+    text += `└──────────────────────────────────────────────────┘\n`;
 
     if (digest.error) {
-      text += `⚠️ Erro: ${digest.error}\n`;
+      text += `  ⚠️ Erro: ${digest.error}\n`;
     } else if (digest.articles.length === 0) {
-      text += `Nenhum artigo encontrado\n`;
+      text += `  Nenhum artigo encontrado\n`;
     } else {
       for (const article of digest.articles) {
-        text += `\n• ${article.title}\n`;
-        text += `  ${article.url}\n`;
+        text += `\n  • ${article.title}\n`;
+        text += `    ${article.url}\n`;
         if (article.summary) {
-          text += `  ${article.summary}\n`;
+          text += `    ${article.summary}\n`;
         }
       }
     }
     text += `\n`;
   }
 
-  text += `\n${'='.repeat(50)}\n`;
-  text += `Este digest é gerado automaticamente 4 vezes por dia.\n`;
-  text += `Fontes: Expresso, Público, Observador, ZeroZero, The Guardian\n`;
+  const sourceNames = digests.map(d => d.source).join(' • ');
+  text += `\n${'─'.repeat(50)}\n\n`;
+  text += `┌──────────────────────────────────────────────────┐\n`;
+  text += `│  💡 Gostou deste digest?                        │\n`;
+  text += `│  Partilhe com amigos e colegas!                 │\n`;
+  text += `└──────────────────────────────────────────────────┘\n\n`;
+  text += `📰 NewsDigest - As notícias que importam, 3x por dia\n`;
+  text += `📡 Fontes: ${sourceNames}\n`;
+  text += `© ${new Date().getFullYear()} NewsDigest. Feito com ❤️ em Portugal.\n`;
 
   return text;
 }
