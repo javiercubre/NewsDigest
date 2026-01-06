@@ -96,9 +96,37 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light only">
-  <meta name="supported-color-schemes" content="light only">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>NewsDigest - O seu resumo diário de notícias</title>
+  <style type="text/css">
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      .email-body { background-color: #1a1a2e !important; }
+      .email-container { background-color: #16213e !important; box-shadow: 0 4px 24px rgba(0,0,0,0.4) !important; }
+      .content-area { background-color: #16213e !important; }
+      .headline-card { background-color: #1a1a2e !important; border-color: #2d3748 !important; }
+      .headline-title { color: #e2e8f0 !important; }
+      .article-link { color: #e2e8f0 !important; }
+      .article-summary { color: #94a3b8 !important; }
+      .section-title { color: #e2e8f0 !important; }
+      .source-tag { background-color: #2d3748 !important; }
+      .game-card { background-color: #1a1a2e !important; border-color: #2d3748 !important; }
+      .error-box { background-color: #7f1d1d !important; border-color: #991b1b !important; }
+      .error-text { color: #fca5a5 !important; }
+      .no-articles-box { background-color: #1a1a2e !important; border-color: #2d3748 !important; }
+      .no-articles-text { color: #94a3b8 !important; }
+      .article-border { border-color: #2d3748 !important; }
+      .footer-bg { background-color: #16213e !important; border-color: #2d3748 !important; }
+      .footer-text { color: #94a3b8 !important; }
+      .category-badge { background-color: #2d3748 !important; color: #cbd5e1 !important; }
+      .divider-line { border-color: #2d3748 !important; }
+      .priority-badge-bg { background-color: #2d3748 !important; }
+    }
+    /* Prevent auto-darkening of specific elements */
+    [data-ogsc] .email-container { background-color: #ffffff !important; }
+    [data-ogsc] .content-area { background-color: #ffffff !important; }
+  </style>
   <!--[if mso]>
   <noscript>
     <xml>
@@ -109,7 +137,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
   </noscript>
   <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1a1a2e; background-color: #f0f2f5;">
+<body class="email-body" style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1a1a2e; background-color: #f0f2f5;">
 
   <!-- Wrapper Table -->
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0f2f5;">
@@ -117,7 +145,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
       <td align="center" style="padding: 20px 10px;">
 
         <!-- Main Container -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 680px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-container" style="max-width: 680px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
 
           <!-- Premium Header -->
           <tr>
@@ -174,7 +202,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
 
           <!-- Content Area -->
           <tr>
-            <td style="padding: 0 30px 30px 30px; background-color: #ffffff;">`;
+            <td class="content-area" style="padding: 0 30px 30px 30px; background-color: #ffffff;">`;
 
   // Top Headlines Section
   if (topHeadlines.length > 0) {
@@ -192,7 +220,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
                               <td style="background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%); width: 4px; border-radius: 2px;">&nbsp;</td>
                               <td style="padding-left: 12px;">
                                 <span style="font-size: 11px; font-weight: 600; color: #e94560; text-transform: uppercase; letter-spacing: 1.5px;">Em Destaque</span>
-                                <h2 style="margin: 4px 0 0 0; font-size: 22px; font-weight: 700; color: #1a1a2e;">Principais Notícias</h2>
+                                <h2 class="section-title" style="margin: 4px 0 0 0; font-size: 22px; font-weight: 700; color: #1a1a2e;">Principais Notícias</h2>
                               </td>
                             </tr>
                           </table>
@@ -209,26 +237,26 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
                     <!-- Headline Card -->
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 16px;">
                       <tr>
-                        <td style="background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 4px solid ${priorityColor}; padding: 20px;">
+                        <td class="headline-card" style="background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 4px solid ${priorityColor}; padding: 20px;">
                           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                             <tr>
                               <td>
                                 <!-- Source Tag -->
                                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
                                   <tr>
-                                    <td style="background: #1a1a2e; border-radius: 6px; padding: 4px 12px;">
+                                    <td class="source-tag" style="background: #1a1a2e; border-radius: 6px; padding: 4px 12px;">
                                       <span style="color: #ffffff; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">${sourceEmoji} ${escapeHtml(article.source || '')}</span>
                                     </td>
                                     <td style="padding-left: 10px;">
-                                      <span style="background: #f1f5f9; color: ${priorityColor}; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 4px; border: 1px solid ${priorityColor};">★ ${article.priority}/10</span>
+                                      <span class="priority-badge-bg" style="background: #f1f5f9; color: ${priorityColor}; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 4px; border: 1px solid ${priorityColor};">★ ${article.priority}/10</span>
                                     </td>
                                   </tr>
                                 </table>
                                 <!-- Title -->
-                                <a href="${escapeHtml(article.url)}" target="_blank" style="color: #1a1a2e; text-decoration: none; font-size: 17px; font-weight: 600; line-height: 1.4; display: block;">${escapeHtml(article.title)}</a>
+                                <a href="${escapeHtml(article.url)}" target="_blank" class="headline-title" style="color: #1a1a2e; text-decoration: none; font-size: 17px; font-weight: 600; line-height: 1.4; display: block;">${escapeHtml(article.title)}</a>
 `;
       if (article.summary) {
-        html += `                                <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin: 10px 0 0 0;">${escapeHtml(article.summary)}</p>\n`;
+        html += `                                <p class="article-summary" style="color: #64748b; font-size: 14px; line-height: 1.5; margin: 10px 0 0 0;">${escapeHtml(article.summary)}</p>\n`;
       }
       html += `
                                 <!-- Read More Link -->
@@ -269,7 +297,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
                               <td style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); width: 4px; border-radius: 2px;">&nbsp;</td>
                               <td style="padding-left: 12px;">
                                 <span style="font-size: 11px; font-weight: 600; color: #f97316; text-transform: uppercase; letter-spacing: 1.5px;">NBA</span>
-                                <h2 style="margin: 4px 0 0 0; font-size: 22px; font-weight: 700; color: #1a1a2e;">Resultados - ${escapeHtml(nbaScores.date)}</h2>
+                                <h2 class="section-title" style="margin: 4px 0 0 0; font-size: 22px; font-weight: 700; color: #1a1a2e;">Resultados - ${escapeHtml(nbaScores.date)}</h2>
                               </td>
                             </tr>
                           </table>
@@ -345,7 +373,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
                     <!-- Game Card -->
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
                       <tr>
-                        <td style="background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; padding: 16px;">
+                        <td class="game-card" style="background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; padding: 16px;">
                           <!-- Score -->
                           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                             <tr>
@@ -414,7 +442,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
                                       <span style="font-size: 20px; margin-right: 8px;">${sourceEmoji}</span>
                                     </td>
                                     <td style="vertical-align: middle;">
-                                      <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: #1a1a2e;">${escapeHtml(digest.source)}</h2>
+                                      <h2 class="section-title" style="margin: 0; font-size: 20px; font-weight: 700; color: #1a1a2e;">${escapeHtml(digest.source)}</h2>
                                     </td>
                                   </tr>
                                 </table>
@@ -433,8 +461,8 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
       html += `
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="background: #fef2f2; border-radius: 8px; padding: 16px; border-left: 4px solid #ef4444;">
-                          <span style="color: #b91c1c; font-size: 14px;">⚠️ Erro ao carregar: ${escapeHtml(digest.error)}</span>
+                        <td class="error-box" style="background: #fef2f2; border-radius: 8px; padding: 16px; border-left: 4px solid #ef4444;">
+                          <span class="error-text" style="color: #b91c1c; font-size: 14px;">⚠️ Erro ao carregar: ${escapeHtml(digest.error)}</span>
                         </td>
                       </tr>
                     </table>
@@ -443,8 +471,8 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
       html += `
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; padding: 16px; text-align: center;">
-                          <span style="color: #64748b; font-size: 14px; font-style: italic;">Nenhum artigo encontrado</span>
+                        <td class="no-articles-box" style="background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; padding: 16px; text-align: center;">
+                          <span class="no-articles-text" style="color: #64748b; font-size: 14px; font-style: italic;">Nenhum artigo encontrado</span>
                         </td>
                       </tr>
                     </table>
@@ -458,14 +486,14 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
         const isLast = i === digest.articles.length - 1;
         html += `
                       <tr>
-                        <td style="padding: 14px 0; ${!isLast ? 'border-bottom: 1px solid #e2e8f0;' : ''}">
-                          <a href="${escapeHtml(article.url)}" target="_blank" style="color: #1a1a2e; text-decoration: none; font-size: 15px; font-weight: 500; line-height: 1.4; display: block;">${escapeHtml(article.title)}</a>
+                        <td class="${!isLast ? 'article-border' : ''}" style="padding: 14px 0; ${!isLast ? 'border-bottom: 1px solid #e2e8f0;' : ''}">
+                          <a href="${escapeHtml(article.url)}" target="_blank" class="article-link" style="color: #1a1a2e; text-decoration: none; font-size: 15px; font-weight: 500; line-height: 1.4; display: block;">${escapeHtml(article.title)}</a>
 `;
         if (article.summary) {
-          html += `                          <p style="color: #64748b; font-size: 13px; line-height: 1.5; margin: 6px 0 0 0;">${escapeHtml(article.summary)}</p>\n`;
+          html += `                          <p class="article-summary" style="color: #64748b; font-size: 13px; line-height: 1.5; margin: 6px 0 0 0;">${escapeHtml(article.summary)}</p>\n`;
         }
         if (article.category) {
-          html += `                          <span style="display: inline-block; background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; margin-top: 8px;">${escapeHtml(article.category)}</span>\n`;
+          html += `                          <span class="category-badge" style="display: inline-block; background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; margin-top: 8px;">${escapeHtml(article.category)}</span>\n`;
         }
         html += `                        </td>
                       </tr>
@@ -492,7 +520,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
             <td style="padding: 0 30px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="border-top: 1px solid #e2e8f0; height: 1px;"></td>
+                  <td class="divider-line" style="border-top: 1px solid #e2e8f0; height: 1px;"></td>
                 </tr>
               </table>
             </td>
@@ -500,13 +528,13 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
 
           <!-- Footer -->
           <tr>
-            <td style="padding: 30px; background: #ffffff; border-top: 1px solid #e2e8f0;">
+            <td class="footer-bg" style="padding: 30px; background: #ffffff; border-top: 1px solid #e2e8f0;">
               <!-- Share CTA -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
                 <tr>
                   <td style="text-align: center;">
-                    <p style="margin: 0 0 12px 0; font-size: 15px; font-weight: 600; color: #1a1a2e;">Gostou deste digest?</p>
-                    <p style="margin: 0 0 16px 0; font-size: 13px; color: #64748b;">Partilhe com amigos e colegas que também querem estar informados.</p>
+                    <p class="section-title" style="margin: 0 0 12px 0; font-size: 15px; font-weight: 600; color: #1a1a2e;">Gostou deste digest?</p>
+                    <p class="footer-text" style="margin: 0 0 16px 0; font-size: 13px; color: #64748b;">Partilhe com amigos e colegas que também querem estar informados.</p>
                   </td>
                 </tr>
               </table>
@@ -515,8 +543,8 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
                 <tr>
                   <td style="text-align: center;">
-                    <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Fontes</span>
-                    <p style="margin: 6px 0 0 0; font-size: 12px; color: #64748b;">${escapeHtml(sourceNames)}</p>
+                    <span class="footer-text" style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Fontes</span>
+                    <p class="footer-text" style="margin: 6px 0 0 0; font-size: 12px; color: #64748b;">${escapeHtml(sourceNames)}</p>
                   </td>
                 </tr>
               </table>
@@ -532,8 +560,8 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
                         </td>
                       </tr>
                     </table>
-                    <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1a1a2e;">NewsDigest</p>
-                    <p style="margin: 0; font-size: 12px; color: #94a3b8;">As notícias que importam, 3x por dia</p>
+                    <p class="section-title" style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1a1a2e;">NewsDigest</p>
+                    <p class="footer-text" style="margin: 0; font-size: 12px; color: #94a3b8;">As notícias que importam, 3x por dia</p>
                   </td>
                 </tr>
               </table>
@@ -543,7 +571,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
           <!-- Copyright -->
           <tr>
             <td style="background: #1a1a2e; padding: 16px 30px; text-align: center;">
-              <p style="margin: 0; font-size: 11px; color: #64748b;">© ${new Date().getFullYear()} NewsDigest. Feito com ❤️ em Portugal.</p>
+              <p class="footer-text" style="margin: 0; font-size: 11px; color: #64748b;">© ${new Date().getFullYear()} NewsDigest. Feito com ❤️ em Portugal.</p>
             </td>
           </tr>
 
