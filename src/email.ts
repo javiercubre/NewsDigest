@@ -96,6 +96,8 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
   <title>NewsDigest - O seu resumo diário de notícias</title>
   <!--[if mso]>
   <noscript>
@@ -172,7 +174,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
 
           <!-- Content Area -->
           <tr>
-            <td style="padding: 0 30px 30px 30px;">`;
+            <td style="padding: 0 30px 30px 30px; background-color: #ffffff;">`;
 
   // Top Headlines Section
   if (topHeadlines.length > 0) {
@@ -207,7 +209,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
                     <!-- Headline Card -->
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 16px;">
                       <tr>
-                        <td style="background: #f8fafc; border-radius: 12px; border-left: 4px solid ${priorityColor}; padding: 20px;">
+                        <td style="background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 4px solid ${priorityColor}; padding: 20px;">
                           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                             <tr>
                               <td>
@@ -218,7 +220,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
                                       <span style="color: #ffffff; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">${sourceEmoji} ${escapeHtml(article.source || '')}</span>
                                     </td>
                                     <td style="padding-left: 10px;">
-                                      <span style="background: ${priorityColor}20; color: ${priorityColor}; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 4px;">★ ${article.priority}/10</span>
+                                      <span style="background: #f1f5f9; color: ${priorityColor}; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 4px; border: 1px solid ${priorityColor};">★ ${article.priority}/10</span>
                                     </td>
                                   </tr>
                                 </table>
@@ -343,7 +345,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
                     <!-- Game Card -->
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
                       <tr>
-                        <td style="background: #f8fafc; border-radius: 10px; padding: 16px;">
+                        <td style="background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; padding: 16px;">
                           <!-- Score -->
                           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                             <tr>
@@ -441,8 +443,8 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
       html += `
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="background: #f8fafc; border-radius: 8px; padding: 16px; text-align: center;">
-                          <span style="color: #94a3b8; font-size: 14px; font-style: italic;">Nenhum artigo encontrado</span>
+                        <td style="background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; padding: 16px; text-align: center;">
+                          <span style="color: #64748b; font-size: 14px; font-style: italic;">Nenhum artigo encontrado</span>
                         </td>
                       </tr>
                     </table>
@@ -456,7 +458,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
         const isLast = i === digest.articles.length - 1;
         html += `
                       <tr>
-                        <td style="padding: 14px 0; ${!isLast ? 'border-bottom: 1px solid #f1f5f9;' : ''}">
+                        <td style="padding: 14px 0; ${!isLast ? 'border-bottom: 1px solid #e2e8f0;' : ''}">
                           <a href="${escapeHtml(article.url)}" target="_blank" style="color: #1a1a2e; text-decoration: none; font-size: 15px; font-weight: 500; line-height: 1.4; display: block;">${escapeHtml(article.title)}</a>
 `;
         if (article.summary) {
@@ -498,7 +500,7 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
 
           <!-- Footer -->
           <tr>
-            <td style="padding: 30px; background: #f8fafc;">
+            <td style="padding: 30px; background: #ffffff; border-top: 1px solid #e2e8f0;">
               <!-- Share CTA -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
                 <tr>
