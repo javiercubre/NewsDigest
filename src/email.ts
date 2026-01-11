@@ -397,6 +397,11 @@ function formatDigestHTML(digests: SourceDigest[], nbaScores?: NBAScores): strin
                                 <strong style="color: #1a1a2e;">MVP:</strong> ${escapeHtml(game.awayTopGameScore.name)} (${escapeHtml(game.awayTopGameScore.value)}) vs ${escapeHtml(game.homeTopGameScore.name)} (${escapeHtml(game.homeTopGameScore.value)})
                               </td>
                             </tr>
+                            <tr>
+                              <td style="padding-top: 8px;">
+                                <a href="${escapeHtml(game.apArticleUrl)}" target="_blank" style="color: #e94560; font-size: 12px; font-weight: 600; text-decoration: none;">📰 Ver no AP News →</a>
+                              </td>
+                            </tr>
                           </table>
                         </td>
                       </tr>
@@ -665,6 +670,7 @@ function formatDigestText(digests: SourceDigest[], nbaScores?: NBAScores): strin
       text += `\n  ${game.awayTeam} ${game.awayScore} @ ${game.homeTeam} ${game.homeScore}`;
       text += ` (V: ${winner})\n`;
       text += `    MVP: ${game.awayTopGameScore.name} (${game.awayTopGameScore.value}) vs ${game.homeTopGameScore.name} (${game.homeTopGameScore.value})\n`;
+      text += `    📰 AP News: ${game.apArticleUrl}\n`;
     }
     text += `\n${'─'.repeat(50)}\n`;
   }
