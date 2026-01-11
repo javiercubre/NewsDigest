@@ -1,5 +1,56 @@
 import axios from 'axios';
 
+// NBA team abbreviation to full name mapping
+const NBA_TEAM_NAMES: Record<string, string> = {
+  ATL: 'Atlanta Hawks',
+  BOS: 'Boston Celtics',
+  BKN: 'Brooklyn Nets',
+  CHA: 'Charlotte Hornets',
+  CHI: 'Chicago Bulls',
+  CLE: 'Cleveland Cavaliers',
+  DAL: 'Dallas Mavericks',
+  DEN: 'Denver Nuggets',
+  DET: 'Detroit Pistons',
+  GS: 'Golden State Warriors',
+  GSW: 'Golden State Warriors',
+  HOU: 'Houston Rockets',
+  IND: 'Indiana Pacers',
+  LAC: 'Los Angeles Clippers',
+  LAL: 'Los Angeles Lakers',
+  MEM: 'Memphis Grizzlies',
+  MIA: 'Miami Heat',
+  MIL: 'Milwaukee Bucks',
+  MIN: 'Minnesota Timberwolves',
+  NO: 'New Orleans Pelicans',
+  NOP: 'New Orleans Pelicans',
+  NY: 'New York Knicks',
+  NYK: 'New York Knicks',
+  OKC: 'Oklahoma City Thunder',
+  ORL: 'Orlando Magic',
+  PHI: 'Philadelphia 76ers',
+  PHX: 'Phoenix Suns',
+  POR: 'Portland Trail Blazers',
+  SA: 'San Antonio Spurs',
+  SAC: 'Sacramento Kings',
+  TOR: 'Toronto Raptors',
+  UTAH: 'Utah Jazz',
+  UTA: 'Utah Jazz',
+  WAS: 'Washington Wizards',
+};
+
+/**
+ * Generate an AP News search URL for a specific NBA game
+ */
+function generateAPNewsUrl(awayTeam: string, homeTeam: string): string {
+  const awayName = NBA_TEAM_NAMES[awayTeam] || awayTeam;
+  const homeName = NBA_TEAM_NAMES[homeTeam] || homeTeam;
+  // Extract just the team nickname (last word) for cleaner search
+  const awayNickname = awayName.split(' ').pop() || awayTeam;
+  const homeNickname = homeName.split(' ').pop() || homeTeam;
+  const query = encodeURIComponent(`${awayNickname} ${homeNickname} NBA`);
+  return `https://apnews.com/search?q=${query}`;
+}
+
 export interface PlayerStat {
   name: string;
   value: string;
@@ -23,6 +74,7 @@ export interface NBAGame {
   awayTopBlocks: PlayerStat;
   homeTopGameScore: PlayerStat;
   awayTopGameScore: PlayerStat;
+  apArticleUrl: string; // Link to AP News article/search for this game
 }
 
 export interface PlayerOfTheNight {
@@ -489,6 +541,7 @@ export async function fetchNBAScores(): Promise<NBAScores> {
           awayTopBlocks: { name: 'N/A', value: '' },
           homeTopGameScore: { name: 'N/A', value: '' },
           awayTopGameScore: { name: 'N/A', value: '' },
+          apArticleUrl: generateAPNewsUrl(awayAbbr, homeAbbr),
         });
       }
     }
